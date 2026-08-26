@@ -11,7 +11,7 @@ A clean, modern, and high-performance Wayland desktop environment setup powered 
 | **Window Manager** | [Sway](https://swaywm.org/) | i3-compatible Wayland tiling compositor |
 | **Status Bar** | [Waybar](https://github.com/Alexays/Waybar) | Highly customizable Wayland bar (Catppuccin Mocha theme) |
 | **Terminal** | [Ghostty](https://ghostty.org/) | Fast, feature-rich GPU-accelerated terminal |
-| **App Launcher** | [Rofi](https://github.com/davatorium/rofi) / `rofi-wayland` | Application menu & window switcher |
+| **App Launcher** | [Rofi](https://github.com/davatorium/rofi) | Application menu & window switcher |
 | **Shell** | [Zsh](https://www.zsh.org/) + [Oh My Zsh](https://ohmyz.sh/) | Powerlevel10k prompt, autosuggestions, eza aliases |
 | **Fonts** | JetBrains Mono & Hack Nerd Font | High-legibility coding fonts with complete icon glyphs |
 | **Audio / Media** | PipeWire / WirePlumber | Controlled via `wpctl` and brightness via `brightnessctl` |
@@ -77,7 +77,7 @@ fc-list : family | grep -E "JetBrainsMono Nerd Font|Hack Nerd Font" | sort -u
 
 ### Step 3: Install Sway, Waybar & Desktop Utilities
 
-Install Sway, Waybar, Rofi (Wayland-compatible), audio/brightness controls, and authentication tools:
+Install Sway, Waybar, Rofi, audio/brightness controls, and authentication tools:
 
 ```bash
 sudo apt install -y \
@@ -88,7 +88,7 @@ sudo apt install -y \
     xwayland \
     xdg-desktop-portal-wlr \
     waybar \
-    rofi-wayland \
+    rofi \
     brightnessctl \
     grim \
     slurp \
