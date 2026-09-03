@@ -15,6 +15,7 @@ A clean, modern, and high-performance Wayland desktop environment setup powered 
 | **Shell** | [Zsh](https://www.zsh.org/) + [Oh My Zsh](https://ohmyz.sh/) | Powerlevel10k prompt, autosuggestions, eza aliases |
 | **Fonts** | JetBrains Mono & Hack Nerd Font | High-legibility coding fonts with complete icon glyphs |
 | **Audio / Media** | PipeWire / WirePlumber | Controlled via `wpctl` and brightness via `brightnessctl` |
+| **Input Method** | [Fcitx5](https://fcitx-im.org/) + Unikey | Vietnamese & English input method with Waybar status indicator |
 
 ---
 
@@ -113,7 +114,62 @@ sudo apt install -y \
 
 ---
 
-### Step 4: Install Ghostty Terminal
+### Step 4: Install & Configure Vietnamese Input Method (Fcitx5)
+
+These dotfiles use **Fcitx5** with the **Unikey** engine for seamless Vietnamese and English typing in Wayland, paired with a custom Waybar indicator module.
+
+#### 1. Remove Conflicting IBus Packages & Install Fcitx5
+Clean up any old IBus daemons to avoid D-Bus conflicts, then install Fcitx5, the Vietnamese Unikey engine, GUI configuration tool, and Wayland/GTK/Qt frontends:
+
+```bash
+# Optional: remove conflicting ibus packages
+sudo apt purge -y ibus ibus-bamboo ibus-unikey
+
+# Install Fcitx5 and the Vietnamese engine
+sudo apt update
+sudo apt install -y \
+    fcitx5 \
+    fcitx5-unikey \
+    fcitx5-frontend-gtk4 \
+    fcitx5-frontend-gtk3 \
+    fcitx5-frontend-qt5 \
+    fcitx5-config-qt
+```
+
+#### 2. Configure Environment Variables
+Edit `/etc/environment` (or `~/.pam_environment`):
+
+```bash
+sudo tee -a /etc/environment << 'EOF'
+XMODIFIERS=@im=fcitx
+QT_IM_MODULE=fcitx
+EOF
+```
+
+> **Important Note on Wayland & GTK:**
+> For modern Wayland applications, native `text-input-v3` handles GTK. **Do NOT set `GTK_IM_MODULE` globally** to prevent issues in GTK4 apps.
+> *(Note: `XMODIFIERS` and `QT_IM_MODULE` are also exported in `.zshrc` and Sway D-Bus session activation).*
+
+#### 3. Configure Vietnamese in Fcitx5 GUI
+Open the configuration GUI:
+
+```bash
+fcitx5-configtool
+```
+
+1. In the left panel (**Current Input Method**), verify your default layout (e.g. *Keyboard - English (US)*).
+2. In the right panel (**Available Input Method**), uncheck **"Only Show Current Language"**.
+3. Search for **Unikey**, select it, and click the left arrow `<<` (or **Add**) to move it into the active list.
+4. Under **Global Options**, configure your activation/toggle hotkey (defaults to `Ctrl+Space`).
+
+#### 4. Autostart & Waybar Status Indicator
+- **Sway Autostart:** Configured in `~/.config/sway/config.d/input.conf` with `exec --no-startup-id fcitx5 -d --replace`.
+- **Toggle Hotkey:** Press `Super + c + k` to toggle input method via `fcitx5-remote -t && pkill -RTMIN+8 waybar`.
+- **Waybar Indicator:** A custom module (`custom/fcitx5`) executes `~/.config/waybar/scripts/fcitx5-status.sh` and listens to signal 8 (or on-click), displaying `VN` or `EN` with Catppuccin styling.
+
+---
+
+### Step 5: Install Ghostty Terminal
 
 Install [Ghostty](https://ghostty.org/) using the official package repository or direct binary/deb for Ubuntu:
 
@@ -128,7 +184,7 @@ sudo snap install ghostty --classic
 
 ---
 
-### Step 5: Install & Configure Zsh with Oh My Zsh and Plugins
+### Step 6: Install & Configure Zsh with Oh My Zsh and Plugins
 
 1. **Install Zsh and change default shell**:
    ```bash
@@ -157,7 +213,7 @@ sudo snap install ghostty --classic
 
 ---
 
-### Step 6: Clone and Symlink Dotfiles
+### Step 7: Clone and Symlink Dotfiles
 
 1. **Clone the repository**:
    ```bash
@@ -186,7 +242,7 @@ sudo snap install ghostty --classic
 
 ---
 
-### Step 7: Launching Sway
+### Step 8: Launching Sway
 
 1. Log out of your current desktop session.
 2. At the display manager (GDM/SDDM/Greetd) login screen, select **Sway** as the session type, or launch directly from TTY by running:
@@ -210,6 +266,7 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
 | `Super + f` | Toggle fullscreen |
 | `Super + Shift + Space` | Toggle floating mode |
 | `Super + Space` | Toggle focus between tiling & floating |
+| `Super + c + k` | Toggle input method (English / Vietnamese Unikey) & update Waybar |
 | `Super + b` | Split layout horizontally |
 | `Super + v` | Split layout vertically |
 | `Super + s` | Stacking layout |
@@ -253,10 +310,12 @@ sway-dotfiles/
 │   │   └── config.rasi
 │   ├── sway/                # Sway window manager config
 │   │   ├── config
-│   │   └── config.d/        # Modular configs (audio, brightness, bar, etc.)
+│   │   └── config.d/        # Modular configs (input/fcitx5, audio, brightness, bar, etc.)
 │   └── waybar/              # Waybar status bar config & Catppuccin CSS
+│       ├── scripts/
+│       │   └── fcitx5-status.sh # Fcitx5 language status indicator script
 │       ├── config.jsonc
 │       └── style.css
-├── .zshrc                   # Zsh configuration (Powerlevel10k, plugins, aliases)
+├── .zshrc                   # Zsh configuration (Powerlevel10k, plugins, aliases, env vars)
 └── README.md                # Installation and usage guide
 ```

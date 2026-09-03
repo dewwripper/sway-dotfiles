@@ -112,6 +112,10 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+# Input method (Fcitx5)
+export XMODIFIERS="@im=fcitx"
+export QT_IM_MODULE="fcitx"
+
 export REQUESTS_CA_BUNDLE=/usr/share/ca-certificates/azure_cli_cert.pem
 
 alias vim='nvim'

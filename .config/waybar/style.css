@@ -39,6 +39,7 @@ window#waybar {
 #backlight,
 #network,
 #pulseaudio,
+#custom-fcitx5,
 #tray,
 #mode {
     padding: 0 8px;
@@ -52,6 +53,15 @@ window#waybar {
 #battery.critical:not(.charging) {
     background-color: #f38ba8;
     color: #11111b;
+}
+
+#custom-fcitx5.vietnamese {
+    color: #a6e3a1;
+    font-weight: bold;
+}
+
+#custom-fcitx5.english {
+    color: #cdd6f4;
 }
 
 #custom-power {
