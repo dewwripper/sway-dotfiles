@@ -14,7 +14,7 @@ A clean, modern, and high-performance Wayland desktop environment setup powered 
 | **App Launcher** | [Rofi](https://github.com/davatorium/rofi) | Application menu & window switcher |
 | **Shell** | [Zsh](https://www.zsh.org/) + [Oh My Zsh](https://ohmyz.sh/) | Powerlevel10k prompt, autosuggestions, eza aliases |
 | **Fonts** | JetBrains Mono & Hack Nerd Font | High-legibility coding fonts with complete icon glyphs |
-| **Audio / Media** | PipeWire / WirePlumber | Controlled via `wpctl` and brightness via `brightnessctl` |
+| **Audio / Media** | PipeWire / WirePlumber & Pavucontrol | Controlled via `wpctl`, GUI mixer via `pavucontrol`, and brightness via `brightnessctl` |
 
 ---
 
@@ -233,11 +233,24 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
 | `Super + Shift + c` | Reload Sway configuration |
 | `Super + Shift + e` | Exit Sway (logout prompt) |
 | `Print` | Take screenshot with `grim` |
+| `Super + Shift + v` | Open audio control mixer (`pavucontrol` floating) |
 | `XF86AudioRaiseVolume` | Increase volume (+5%) via WirePlumber |
 | `XF86AudioLowerVolume` | Decrease volume (-5%) via WirePlumber |
 | `XF86AudioMute` | Toggle audio mute via WirePlumber |
 | `XF86MonBrightnessUp` | Increase display brightness (+5%) via `brightnessctl` |
 | `XF86MonBrightnessDown` | Decrease display brightness (-5%) via `brightnessctl` |
+
+### 🔊 Audio & Volume Management
+- **Hardware Keys:** Adjust volume (+5% / -5%) and toggle mute using dedicated media keys via WirePlumber (`wpctl`).
+- **GUI Mixer (`pavucontrol`):** Open the PipeWire/PulseAudio mixer using `Super + Shift + v` or by right-clicking the Waybar volume module.
+- **Floating Window Rule:** `pavucontrol` automatically opens as a centered floating window (`700x500`) rather than splitting your tiled layout.
+- **Waybar Audio Interactions:**
+  - **Left-Click:** Toggle audio mute (`wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle`).
+  - **Right-Click:** Launch `pavucontrol`.
+  - **Scroll Up / Down:** Raise / lower volume by 5%.
+- **Reloading Configs:**
+  - Reload Sway: Press `Super + Shift + c` (or run `swaymsg reload`).
+  - Restart Waybar: Run `killall waybar && waybar &`.
 
 ---
 
@@ -253,7 +266,7 @@ sway-dotfiles/
 │   │   └── config.rasi
 │   ├── sway/                # Sway window manager config
 │   │   ├── config
-│   │   └── config.d/        # Modular configs (audio, brightness, bar, etc.)
+│   │   └── config.d/        # Modular configs (audio/pavucontrol, brightness, bar, etc.)
 │   └── waybar/              # Waybar status bar config & Catppuccin CSS
 │       ├── config.jsonc
 │       └── style.css
