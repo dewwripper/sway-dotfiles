@@ -248,7 +248,19 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
 ### 📊 Quickshell Status Bar
 - **Workspaces:** Interactive workspace indicators on the left; click any workspace number to switch directly to it.
 - **Active Window:** Displays the currently focused application title in the center.
+- **Volume Control:**
+  - **Indicator:** Real-time volume percentage with dynamic Nerd Font speaker icons (`󰕾`, `󰖀`, `󰕿`) and mute indicator (`󰝟 Muted`).
+  - **Left-Click:** Toggle audio mute.
+  - **Right-Click:** Open GUI mixer (`pavucontrol`).
+  - **Scroll Up / Down:** Raise / lower volume by 5%.
+- **Bluetooth Control:**
+  - **Indicator:** Real-time Bluetooth adapter and connection status (`󰂱 <Device>` when connected, `󰂯 On` when active, `󰂲 Off` when disabled).
+  - **Left-Click:** Toggle Bluetooth power on / off.
+  - **Right-Click:** Open Bluetooth settings manager (`blueman-manager` / GNOME Bluetooth settings).
 - **Clock:** Real-time date and digital clock formatted on the right.
+- **Power Menu:**
+  - **Left-Click:** Open/toggle the interactive power menu banner (`swaynag`) with options for **Lock**, **Suspend**, **Hibernate**, **Reboot**, and **Shutdown**.
+  - **Right-Click:** Immediate screen lock (`swaylock`).
 
 ### 🔄 Reloading Configurations
 - **Reload Sway:** Press `Super + Shift + c` (or run `swaymsg reload`).
