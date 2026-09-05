@@ -1,6 +1,6 @@
 # Sway Dotfiles for Ubuntu 26.04
 
-A clean, modern, and high-performance Wayland desktop environment setup powered by **Sway**, **Waybar**, **Ghostty**, and **Zsh** (with Catppuccin Mocha theme & Nerd Fonts).
+A clean, modern, and high-performance Wayland desktop environment setup powered by **Sway**, **Quickshell**, **Ghostty**, and **Zsh** (with Catppuccin Mocha theme & Nerd Fonts).
 
 ---
 
@@ -9,7 +9,7 @@ A clean, modern, and high-performance Wayland desktop environment setup powered 
 | Component | Software | Description |
 | :--- | :--- | :--- |
 | **Window Manager** | [Sway](https://swaywm.org/) | i3-compatible Wayland tiling compositor |
-| **Status Bar** | [Waybar](https://github.com/Alexays/Waybar) | Highly customizable Wayland bar (Catppuccin Mocha theme) |
+| **Status Bar** | [Quickshell](https://quickshell.outfoxxed.me/) | Flexible QtQuick/QML-based desktop shell & status bar (Catppuccin Mocha theme) |
 | **Terminal** | [Ghostty](https://ghostty.org/) | Fast, feature-rich GPU-accelerated terminal |
 | **App Launcher** | [Rofi](https://github.com/davatorium/rofi) | Application menu & window switcher |
 | **Shell** | [Zsh](https://www.zsh.org/) + [Oh My Zsh](https://ohmyz.sh/) | Powerlevel10k prompt, autosuggestions, eza aliases |
@@ -44,7 +44,7 @@ sudo apt install -y \
 
 ### Step 2: Install JetBrains Mono & Hack Nerd Fonts
 
-These dotfiles use **Hack Nerd Font** for Ghostty and **JetBrains Mono Nerd Font** (along with Hack) for Waybar icons and status indicators.
+These dotfiles use **Hack Nerd Font** for Ghostty and **JetBrains Mono Nerd Font** (along with Hack) for Quickshell icons and status indicators.
 
 Run the following commands to download and install both Nerd Fonts in the system:
 
@@ -75,9 +75,9 @@ fc-list : family | grep -E "JetBrainsMono Nerd Font|Hack Nerd Font" | sort -u
 
 ---
 
-### Step 3: Install Sway, Waybar & Desktop Utilities
+### Step 3: Install Sway, Quickshell & Desktop Utilities
 
-Install Sway, Waybar, Rofi, audio/brightness controls, and authentication tools:
+Install Sway, Quickshell, Rofi, audio/brightness controls, and authentication tools:
 
 ```bash
 sudo apt install -y \
@@ -87,7 +87,7 @@ sudo apt install -y \
     swaybg \
     xwayland \
     xdg-desktop-portal-wlr \
-    waybar \
+    quickshell \
     rofi \
     brightnessctl \
     grim \
@@ -171,14 +171,14 @@ sudo snap install ghostty --classic
 
    # Backup any existing configs if present
    [ -d ~/.config/sway ] && mv ~/.config/sway ~/.config/sway.backup.$(date +%s)
-   [ -d ~/.config/waybar ] && mv ~/.config/waybar ~/.config/waybar.backup.$(date +%s)
+   [ -d ~/.config/quickshell ] && mv ~/.config/quickshell ~/.config/quickshell.backup.$(date +%s)
    [ -d ~/.config/ghostty ] && mv ~/.config/ghostty ~/.config/ghostty.backup.$(date +%s)
    [ -d ~/.config/rofi ] && mv ~/.config/rofi ~/.config/rofi.backup.$(date +%s)
    [ -f ~/.zshrc ] && mv ~/.zshrc ~/.zshrc.backup.$(date +%s)
 
    # Link configurations
    ln -sfn ~/sway-dotfiles/.config/sway ~/.config/sway
-   ln -sfn ~/sway-dotfiles/.config/waybar ~/.config/waybar
+   ln -sfn ~/sway-dotfiles/.config/quickshell ~/.config/quickshell
    ln -sfn ~/sway-dotfiles/.config/ghostty ~/.config/ghostty
    ln -sfn ~/sway-dotfiles/.config/rofi ~/.config/rofi
    ln -sf ~/sway-dotfiles/.zshrc ~/.zshrc
@@ -242,15 +242,17 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
 
 ### 🔊 Audio & Volume Management
 - **Hardware Keys:** Adjust volume (+5% / -5%) and toggle mute using dedicated media keys via WirePlumber (`wpctl`).
-- **GUI Mixer (`pavucontrol`):** Open the PipeWire/PulseAudio mixer using `Super + Shift + v` or by right-clicking the Waybar volume module.
+- **GUI Mixer (`pavucontrol`):** Open the PipeWire/PulseAudio mixer using `Super + Shift + v`.
 - **Floating Window Rule:** `pavucontrol` automatically opens as a centered floating window (`700x500`) rather than splitting your tiled layout.
-- **Waybar Audio Interactions:**
-  - **Left-Click:** Toggle audio mute (`wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle`).
-  - **Right-Click:** Launch `pavucontrol`.
-  - **Scroll Up / Down:** Raise / lower volume by 5%.
-- **Reloading Configs:**
-  - Reload Sway: Press `Super + Shift + c` (or run `swaymsg reload`).
-  - Restart Waybar: Run `killall waybar && waybar &`.
+
+### 📊 Quickshell Status Bar
+- **Workspaces:** Interactive workspace indicators on the left; click any workspace number to switch directly to it.
+- **Active Window:** Displays the currently focused application title in the center.
+- **Clock:** Real-time date and digital clock formatted on the right.
+
+### 🔄 Reloading Configurations
+- **Reload Sway:** Press `Super + Shift + c` (or run `swaymsg reload`).
+- **Restart Quickshell:** Run `pkill quickshell; quickshell &` (or detached with `quickshell -d`).
 
 ---
 
@@ -262,12 +264,14 @@ sway-dotfiles/
 │   ├── ghostty/             # Ghostty terminal config & Catppuccin themes
 │   │   ├── config
 │   │   └── themes/
+│   ├── quickshell/          # Quickshell status bar config (QtQuick/QML)
+│   │   └── shell.qml
 │   ├── rofi/                # Rofi application launcher config
 │   │   └── config.rasi
 │   ├── sway/                # Sway window manager config
 │   │   ├── config
 │   │   └── config.d/        # Modular configs (audio/pavucontrol, brightness, bar, etc.)
-│   └── waybar/              # Waybar status bar config & Catppuccin CSS
+│   └── waybar/              # (Optional) Waybar status bar config & Catppuccin CSS
 │       ├── config.jsonc
 │       └── style.css
 ├── .zshrc                   # Zsh configuration (Powerlevel10k, plugins, aliases)
