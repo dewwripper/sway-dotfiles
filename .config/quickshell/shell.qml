@@ -231,6 +231,40 @@ PanelWindow {
                 }
             }
 
+            // Notification Center Button (SwayNC)
+            Rectangle {
+                id: notifButton
+                anchors.verticalCenter: parent.verticalCenter
+                width: 26
+                height: 24
+                radius: 5
+                color: notifMouseArea.containsMouse ? "#45475a" : "#313244"
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "󰂚"
+                    color: notifMouseArea.containsMouse ? "#89b4fa" : "#cdd6f4"
+                    font.family: "JetBrainsMono Nerd Font"
+                    font.pixelSize: 13
+                }
+
+                MouseArea {
+                    id: notifMouseArea
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    hoverEnabled: true
+
+                    onClicked: mouse => {
+                        if (mouse.button === Qt.LeftButton) {
+                            I3.dispatch("exec swaync-client -t -sw");
+                        } else if (mouse.button === Qt.RightButton) {
+                            I3.dispatch("exec swaync-client -d -sw");
+                        }
+                    }
+                }
+            }
+
             // System Clock
             Text {
                 id: clockText
@@ -258,12 +292,12 @@ PanelWindow {
                 width: 26
                 height: 24
                 radius: 5
-                color: pwrMouseArea.containsMouse ? "#f38ba8" : "#313244"
+                color: (powerMenu.visible || pwrMouseArea.containsMouse) ? "#f38ba8" : "#313244"
 
                 Text {
                     anchors.centerIn: parent
                     text: ""
-                    color: pwrMouseArea.containsMouse ? "#11111b" : "#f38ba8"
+                    color: (powerMenu.visible || pwrMouseArea.containsMouse) ? "#11111b" : "#f38ba8"
                     font.family: "JetBrainsMono Nerd Font"
                     font.pixelSize: 13
                     font.bold: true
@@ -278,9 +312,93 @@ PanelWindow {
 
                     onClicked: mouse => {
                         if (mouse.button === Qt.LeftButton) {
-                            I3.dispatch("exec pkill swaynag || swaynag -t warning -m 'Power Menu' -Z 'Lock' 'swaylock -f' -Z 'Suspend' 'systemctl suspend' -Z 'Hibernate' 'systemctl hibernate' -Z 'Reboot' 'systemctl reboot' -Z 'Shutdown' 'systemctl poweroff'");
+                            powerMenu.visible = !powerMenu.visible;
                         } else if (mouse.button === Qt.RightButton) {
                             I3.dispatch("exec swaylock");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Shutdown / Power Dropdown Menu
+    PopupWindow {
+        id: powerMenu
+        anchor.window: bar
+        anchor.item: pwrButton
+        anchor.edges: Edges.Bottom | Edges.Right
+        anchor.gravity: Edges.Bottom | Edges.Left
+        anchor.margins.top: 6
+        visible: false
+
+        implicitWidth: 150
+        implicitHeight: menuCol.implicitHeight + 12
+        color: "transparent"
+
+        onClosed: visible = false
+
+        Rectangle {
+            anchors.fill: parent
+            radius: 8
+            color: "#181825"
+            border.color: "#313244"
+            border.width: 1
+
+            Column {
+                id: menuCol
+                anchors.fill: parent
+                anchors.margins: 6
+                spacing: 3
+
+                Repeater {
+                    model: [
+                        { icon: "", label: "Lock", cmd: "swaylock", iconColor: "#89b4fa" },
+                        { icon: "󰒲", label: "Suspend", cmd: "systemctl suspend", iconColor: "#b4befe" },
+                        { icon: "󰒄", label: "Hibernate", cmd: "systemctl hibernate", iconColor: "#fab387" },
+                        { icon: "󰜉", label: "Reboot", cmd: "systemctl reboot", iconColor: "#f9e2af" },
+                        { icon: "", label: "Shutdown", cmd: "systemctl poweroff", iconColor: "#f38ba8" }
+                    ]
+
+                    Rectangle {
+                        width: menuCol.width
+                        height: 28
+                        radius: 5
+                        color: itemMouse.containsMouse ? (modelData.label === "Shutdown" ? "#f38ba8" : "#313244") : "transparent"
+
+                        Row {
+                            anchors.fill: parent
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 10
+                            spacing: 10
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: modelData.icon
+                                color: (itemMouse.containsMouse && modelData.label === "Shutdown") ? "#11111b" : modelData.iconColor
+                                font.family: "JetBrainsMono Nerd Font"
+                                font.pixelSize: 13
+                            }
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: modelData.label
+                                color: (itemMouse.containsMouse && modelData.label === "Shutdown") ? "#11111b" : "#cdd6f4"
+                                font.family: "JetBrainsMono Nerd Font"
+                                font.pixelSize: 13
+                                font.bold: true
+                            }
+                        }
+
+                        MouseArea {
+                            id: itemMouse
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            hoverEnabled: true
+                            onClicked: {
+                                powerMenu.visible = false;
+                                I3.dispatch("exec " + modelData.cmd);
+                            }
                         }
                     }
                 }

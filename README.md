@@ -87,6 +87,7 @@ sudo apt install -y \
     swaybg \
     xwayland \
     xdg-desktop-portal-wlr \
+    sway-notification-center \
     quickshell \
     rofi \
     brightnessctl \
@@ -172,6 +173,7 @@ sudo snap install ghostty --classic
    # Backup any existing configs if present
    [ -d ~/.config/sway ] && mv ~/.config/sway ~/.config/sway.backup.$(date +%s)
    [ -d ~/.config/quickshell ] && mv ~/.config/quickshell ~/.config/quickshell.backup.$(date +%s)
+   [ -d ~/.config/swaync ] && mv ~/.config/swaync ~/.config/swaync.backup.$(date +%s)
    [ -d ~/.config/ghostty ] && mv ~/.config/ghostty ~/.config/ghostty.backup.$(date +%s)
    [ -d ~/.config/rofi ] && mv ~/.config/rofi ~/.config/rofi.backup.$(date +%s)
    [ -f ~/.zshrc ] && mv ~/.zshrc ~/.zshrc.backup.$(date +%s)
@@ -179,6 +181,7 @@ sudo snap install ghostty --classic
    # Link configurations
    ln -sfn ~/sway-dotfiles/.config/sway ~/.config/sway
    ln -sfn ~/sway-dotfiles/.config/quickshell ~/.config/quickshell
+   ln -sfn ~/sway-dotfiles/.config/swaync ~/.config/swaync
    ln -sfn ~/sway-dotfiles/.config/ghostty ~/.config/ghostty
    ln -sfn ~/sway-dotfiles/.config/rofi ~/.config/rofi
    ln -sf ~/sway-dotfiles/.zshrc ~/.zshrc
@@ -232,6 +235,8 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
 | :--- | :--- |
 | `Super + Shift + c` | Reload Sway configuration |
 | `Super + Shift + e` | Exit Sway (logout prompt) |
+| `Super + Shift + n` | Toggle notification control center (`swaync-client -t -sw`) |
+| `Super + Shift + d` | Toggle Do Not Disturb (`swaync-client -d -sw`) |
 | `Print` | Take screenshot with `grim` |
 | `Super + Shift + v` | Open audio control mixer (`pavucontrol` floating) |
 | `XF86AudioRaiseVolume` | Increase volume (+5%) via WirePlumber |
@@ -245,6 +250,11 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
 - **GUI Mixer (`pavucontrol`):** Open the PipeWire/PulseAudio mixer using `Super + Shift + v`.
 - **Floating Window Rule:** `pavucontrol` automatically opens as a centered floating window (`700x500`) rather than splitting your tiled layout.
 
+### 🔔 Notification Center (SwayNotificationCenter)
+- **Daemon:** Sway launches `swaync` automatically on startup via `~/.config/sway/config.d/notifications.conf`.
+- **Control Center:** Press `Super + Shift + n` or click the bell icon in Quickshell to toggle the Catppuccin Mocha notification panel with media player controls, volume slider, and quick action toggles.
+- **Do Not Disturb:** Press `Super + Shift + d` or right-click the notification bell in Quickshell to toggle DND mode.
+
 ### 📊 Quickshell Status Bar
 - **Workspaces:** Interactive workspace indicators on the left; click any workspace number to switch directly to it.
 - **Active Window:** Displays the currently focused application title in the center.
@@ -257,14 +267,20 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
   - **Indicator:** Real-time Bluetooth adapter and connection status (`󰂱 <Device>` when connected, `󰂯 On` when active, `󰂲 Off` when disabled).
   - **Left-Click:** Toggle Bluetooth power on / off.
   - **Right-Click:** Open Bluetooth settings manager (`blueman-manager` / GNOME Bluetooth settings).
+- **Notification Center:**
+  - **Indicator:** Bell icon (`󰂚`).
+  - **Left-Click:** Toggle SwayNotificationCenter control panel (`swaync-client -t -sw`).
+  - **Right-Click:** Toggle Do Not Disturb (`swaync-client -d -sw`).
 - **Clock:** Real-time date and digital clock formatted on the right.
-- **Power Menu:**
-  - **Left-Click:** Open/toggle the interactive power menu banner (`swaynag`) with options for **Lock**, **Suspend**, **Hibernate**, **Reboot**, and **Shutdown**.
+- **Power & Shutdown Menu:**
+  - **Left-Click:** Toggle the native desktop dropdown menu under the button with options for **Lock** (``), **Suspend** (`󰒲`), **Hibernate** (`󰒄`), **Reboot** (`󰜉`), and **Shutdown** (``).
   - **Right-Click:** Immediate screen lock (`swaylock`).
+  - **Dismiss:** Click outside or select any option to automatically close the dropdown.
 
 ### 🔄 Reloading Configurations
 - **Reload Sway:** Press `Super + Shift + c` (or run `swaymsg reload`).
 - **Restart Quickshell:** Run `pkill quickshell; quickshell &` (or detached with `quickshell -d`).
+- **Reload SwayNC:** Run `swaync-client -R && swaync-client -rs`.
 
 ---
 
@@ -282,7 +298,10 @@ sway-dotfiles/
 │   │   └── config.rasi
 │   ├── sway/                # Sway window manager config
 │   │   ├── config
-│   │   └── config.d/        # Modular configs (audio/pavucontrol, brightness, bar, etc.)
+│   │   └── config.d/        # Modular configs (audio, brightness, bar, notifications, etc.)
+│   ├── swaync/              # SwayNotificationCenter config & Catppuccin Mocha CSS
+│   │   ├── config.json
+│   │   └── style.css
 │   └── waybar/              # (Optional) Waybar status bar config & Catppuccin CSS
 │       ├── config.jsonc
 │       └── style.css
