@@ -98,6 +98,7 @@ sudo apt install -y \
     pipewire-pulse \
     pulseaudio-utils \
     pavucontrol \
+    blueman \
     polkit-gnome \
     neovim \
     eza
@@ -239,6 +240,7 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
 | `Super + Shift + d` | Toggle Do Not Disturb (`swaync-client -d -sw`) |
 | `Print` | Take screenshot with `grim` |
 | `Super + Shift + v` | Open audio control mixer (`pavucontrol` floating) |
+| `Super + Shift + b` | Open Bluetooth manager (`blueman-manager` floating) |
 | `XF86AudioRaiseVolume` | Increase volume (+5%) via WirePlumber |
 | `XF86AudioLowerVolume` | Decrease volume (-5%) via WirePlumber |
 | `XF86AudioMute` | Toggle audio mute via WirePlumber |
@@ -249,6 +251,13 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
 - **Hardware Keys:** Adjust volume (+5% / -5%) and toggle mute using dedicated media keys via WirePlumber (`wpctl`).
 - **GUI Mixer (`pavucontrol`):** Open the PipeWire/PulseAudio mixer using `Super + Shift + v`.
 - **Floating Window Rule:** `pavucontrol` automatically opens as a centered floating window (`700x500`) rather than splitting your tiled layout.
+
+### 󰂯 Bluetooth Management
+- **GUI Manager (`blueman-manager`):** Full-featured GTK Bluetooth manager tailored for standalone window managers like Sway.
+  - Discover, pair, connect, and manage Bluetooth devices.
+  - Audio profile selection (A2DP / HSP/HFP) and file transfers.
+- **Floating Window Rule:** `blueman-manager` automatically opens as a centered floating window (`700x500`) via `~/.config/sway/config.d/bluetooth.conf`.
+- **Shortcuts:** Press `Super + Shift + b` or right-click the Quickshell Bluetooth button to open `blueman-manager`.
 
 ### 🔔 Notification Center (SwayNotificationCenter)
 - **Daemon:** Sway launches `swaync` automatically on startup via `~/.config/sway/config.d/notifications.conf`.
@@ -266,7 +275,7 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
 - **Bluetooth Control:**
   - **Indicator:** Real-time Bluetooth adapter and connection status (`󰂱 <Device>` when connected, `󰂯 On` when active, `󰂲 Off` when disabled).
   - **Left-Click:** Toggle Bluetooth power on / off.
-  - **Right-Click:** Open Bluetooth settings manager (`blueman-manager` / GNOME Bluetooth settings).
+  - **Right-Click:** Open Bluetooth manager (`blueman-manager`).
 - **Notification Center:**
   - **Indicator:** Bell icon (`󰂚`).
   - **Left-Click:** Toggle SwayNotificationCenter control panel (`swaync-client -t -sw`).

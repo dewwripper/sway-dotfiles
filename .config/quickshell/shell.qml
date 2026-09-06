@@ -223,9 +223,11 @@ PanelWindow {
                         if (mouse.button === Qt.LeftButton) {
                             if (bar.btAdapter) {
                                 bar.btAdapter.enabled = !bar.btAdapter.enabled;
+                            } else {
+                                I3.dispatch("exec bluetoothctl power on");
                             }
                         } else if (mouse.button === Qt.RightButton) {
-                            I3.dispatch("exec which blueman-manager >/dev/null 2>&1 && blueman-manager || env XDG_CURRENT_DESKTOP=GNOME gnome-control-center bluetooth");
+                            I3.dispatch("exec blueman-manager");
                         }
                     }
                 }
