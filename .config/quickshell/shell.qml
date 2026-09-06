@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import Quickshell.I3
 import Quickshell.Services.Pipewire
 import Quickshell.Bluetooth
+import Quickshell.Io
 
 PanelWindow {
     id: bar
@@ -41,6 +42,79 @@ PanelWindow {
             if (dev && dev.connected) return dev;
         }
         return null;
+    }
+
+    // System resource monitor properties
+    property int cpuUsage: 0
+    property int memUsage: 0
+    property string memUsedGb: "0.0"
+    property string memTotalGb: "0.0"
+    property var lastCpuIdle: 0
+    property var lastCpuTotal: 0
+    property bool showRamDetailed: false
+
+    // Resource monitoring process
+    Process {
+        id: sysProc
+        command: ["awk", "/^cpu /{print $0; nextfile} /^MemTotal:/{t=$2} /^MemAvailable:/{a=$2} END{print \"mem\",t,a}", "/proc/stat", "/proc/meminfo"]
+        stdout: SplitParser {
+            onRead: data => {
+                if (!data) return;
+                var p = data.trim().split(/\s+/);
+                if (p[0] === "cpu") {
+                    var user = parseInt(p[1]) || 0;
+                    var nice = parseInt(p[2]) || 0;
+                    var system = parseInt(p[3]) || 0;
+                    var idle = parseInt(p[4]) || 0;
+                    var iowait = parseInt(p[5]) || 0;
+                    var irq = parseInt(p[6]) || 0;
+                    var softirq = parseInt(p[7]) || 0;
+                    var steal = parseInt(p[8]) || 0;
+
+                    var idleTime = idle + iowait;
+                    var totalTime = user + nice + system + idle + iowait + irq + softirq + steal;
+
+                    if (bar.lastCpuTotal > 0) {
+                        var diffTotal = totalTime - bar.lastCpuTotal;
+                        var diffIdle = idleTime - bar.lastCpuIdle;
+                        if (diffTotal > 0) {
+                            var usage = Math.round(100 * (1.0 - diffIdle / diffTotal));
+                            bar.cpuUsage = Math.max(0, Math.min(100, usage));
+                        }
+                    }
+                    bar.lastCpuTotal = totalTime;
+                    bar.lastCpuIdle = idleTime;
+                } else if (p[0] === "mem") {
+                    var totalKb = parseInt(p[1]) || 1;
+                    var availKb = parseInt(p[2]) || 0;
+                    var usedKb = Math.max(0, totalKb - availKb);
+                    bar.memUsage = Math.max(0, Math.min(100, Math.round(100 * usedKb / totalKb)));
+                    bar.memUsedGb = (usedKb / 1048576).toFixed(1);
+                    bar.memTotalGb = (totalKb / 1048576).toFixed(1);
+                }
+            }
+        }
+        Component.onCompleted: running = true
+    }
+
+    // Fast initial reading for CPU delta
+    Timer {
+        interval: 400
+        running: true
+        repeat: false
+        onTriggered: {
+            if (!sysProc.running) sysProc.running = true;
+        }
+    }
+
+    // Periodic system stats refresh every 2 seconds
+    Timer {
+        interval: 2000
+        running: true
+        repeat: true
+        onTriggered: {
+            if (!sysProc.running) sysProc.running = true;
+        }
     }
 
     // Main 3-column layout: Left, Center, Right
@@ -97,6 +171,100 @@ PanelWindow {
         Row {
             Layout.alignment: Qt.AlignRight
             spacing: 10
+
+            // CPU Status Button
+            Rectangle {
+                id: cpuButton
+                anchors.verticalCenter: parent.verticalCenter
+                height: 24
+                width: cpuRow.implicitWidth + 16
+                radius: 5
+                color: cpuMouseArea.containsMouse ? "#45475a" : "#313244"
+
+                Row {
+                    id: cpuRow
+                    anchors.centerIn: parent
+                    spacing: 6
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: ""
+                        color: bar.cpuUsage >= 80 ? "#f38ba8" : "#fab387"
+                        font.family: "JetBrainsMono Nerd Font"
+                        font.pixelSize: 13
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: bar.cpuUsage + "%"
+                        color: bar.cpuUsage >= 80 ? "#f38ba8" : "#cdd6f4"
+                        font.family: "JetBrainsMono Nerd Font"
+                        font.pixelSize: 13
+                        font.bold: true
+                    }
+                }
+
+                MouseArea {
+                    id: cpuMouseArea
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    hoverEnabled: true
+
+                    onClicked: {
+                        I3.dispatch("exec ghostty -e btop");
+                    }
+                }
+            }
+
+            // RAM Status Button
+            Rectangle {
+                id: ramButton
+                anchors.verticalCenter: parent.verticalCenter
+                height: 24
+                width: ramRow.implicitWidth + 16
+                radius: 5
+                color: ramMouseArea.containsMouse ? "#45475a" : "#313244"
+
+                Row {
+                    id: ramRow
+                    anchors.centerIn: parent
+                    spacing: 6
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "󰍛"
+                        color: bar.memUsage >= 85 ? "#f38ba8" : "#cba6f7"
+                        font.family: "JetBrainsMono Nerd Font"
+                        font.pixelSize: 13
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: bar.showRamDetailed ? (bar.memUsedGb + "G") : (bar.memUsage + "%")
+                        color: bar.memUsage >= 85 ? "#f38ba8" : "#cdd6f4"
+                        font.family: "JetBrainsMono Nerd Font"
+                        font.pixelSize: 13
+                        font.bold: true
+                    }
+                }
+
+                MouseArea {
+                    id: ramMouseArea
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    hoverEnabled: true
+
+                    onClicked: mouse => {
+                        if (mouse.button === Qt.LeftButton) {
+                            I3.dispatch("exec ghostty -e btop");
+                        } else if (mouse.button === Qt.RightButton) {
+                            bar.showRamDetailed = !bar.showRamDetailed;
+                        }
+                    }
+                }
+            }
 
             // Volume Control Button
             Rectangle {
