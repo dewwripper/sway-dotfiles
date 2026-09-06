@@ -53,6 +53,10 @@ PanelWindow {
     property var lastCpuTotal: 0
     property bool showRamDetailed: false
 
+    // Input method properties
+    property string currentIm: "keyboard-us"
+    readonly property bool isVietnamese: currentIm === "unikey" || currentIm.indexOf("unikey") !== -1 || currentIm.indexOf("bamboo") !== -1
+
     // Resource monitoring process
     Process {
         id: sysProc
@@ -114,6 +118,29 @@ PanelWindow {
         repeat: true
         onTriggered: {
             if (!sysProc.running) sysProc.running = true;
+        }
+    }
+
+    // Input method monitoring process
+    Process {
+        id: imProc
+        command: ["fcitx5-remote", "-n"]
+        stdout: SplitParser {
+            onRead: data => {
+                if (!data) return;
+                bar.currentIm = data.trim();
+            }
+        }
+        Component.onCompleted: running = true
+    }
+
+    // Periodic input method status check every 1 second
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            if (!imProc.running) imProc.running = true;
         }
     }
 
@@ -396,6 +423,58 @@ PanelWindow {
                             }
                         } else if (mouse.button === Qt.RightButton) {
                             I3.dispatch("exec blueman-manager");
+                        }
+                    }
+                }
+            }
+
+            // Input Method Button (Fcitx5: Vietnamese / English)
+            Rectangle {
+                id: imButton
+                anchors.verticalCenter: parent.verticalCenter
+                height: 24
+                width: imRow.implicitWidth + 16
+                radius: 5
+                color: imMouseArea.containsMouse ? "#45475a" : "#313244"
+
+                Row {
+                    id: imRow
+                    anchors.centerIn: parent
+                    spacing: 6
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "󰌌"
+                        color: bar.isVietnamese ? "#f9e2af" : "#89b4fa"
+                        font.family: "JetBrainsMono Nerd Font"
+                        font.pixelSize: 13
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: bar.isVietnamese ? "VIE" : "ENG"
+                        color: bar.isVietnamese ? "#f9e2af" : "#cdd6f4"
+                        font.family: "JetBrainsMono Nerd Font"
+                        font.pixelSize: 13
+                        font.bold: true
+                    }
+                }
+
+                MouseArea {
+                    id: imMouseArea
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    hoverEnabled: true
+
+                    onClicked: mouse => {
+                        if (mouse.button === Qt.LeftButton) {
+                            var nextIm = bar.isVietnamese ? "keyboard-us" : "unikey";
+                            bar.currentIm = nextIm;
+                            I3.dispatch("exec fcitx5-remote -s " + nextIm);
+                            if (!imProc.running) imProc.running = true;
+                        } else if (mouse.button === Qt.RightButton) {
+                            I3.dispatch("exec fcitx5-configtool");
                         }
                     }
                 }
