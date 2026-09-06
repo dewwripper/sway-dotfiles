@@ -11,6 +11,7 @@ A clean, modern, and high-performance Wayland desktop environment setup powered 
 | **Window Manager** | [Sway](https://swaywm.org/) | i3-compatible Wayland tiling compositor |
 | **Status Bar** | [Quickshell](https://quickshell.outfoxxed.me/) | Flexible QtQuick/QML-based desktop shell & status bar (Catppuccin Mocha theme) |
 | **Terminal** | [Ghostty](https://ghostty.org/) | Fast, feature-rich GPU-accelerated terminal |
+| **Editor** | [Neovim](https://neovim.io/) | Modern modal text editor configured with LazyVim & Catppuccin Mocha theme |
 | **App Launcher** | [Rofi](https://github.com/davatorium/rofi) | Application menu & window switcher |
 | **Shell** | [Zsh](https://www.zsh.org/) + [Oh My Zsh](https://ohmyz.sh/) | Powerlevel10k prompt, autosuggestions, eza aliases |
 | **Fonts** | JetBrains Mono & Hack Nerd Font | High-legibility coding fonts with complete icon glyphs |
@@ -177,6 +178,7 @@ sudo snap install ghostty --classic
    [ -d ~/.config/swaync ] && mv ~/.config/swaync ~/.config/swaync.backup.$(date +%s)
    [ -d ~/.config/ghostty ] && mv ~/.config/ghostty ~/.config/ghostty.backup.$(date +%s)
    [ -d ~/.config/rofi ] && mv ~/.config/rofi ~/.config/rofi.backup.$(date +%s)
+   [ -d ~/.config/nvim ] && mv ~/.config/nvim ~/.config/nvim.backup.$(date +%s)
    [ -f ~/.zshrc ] && mv ~/.zshrc ~/.zshrc.backup.$(date +%s)
 
    # Link configurations
@@ -185,6 +187,7 @@ sudo snap install ghostty --classic
    ln -sfn ~/sway-dotfiles/.config/swaync ~/.config/swaync
    ln -sfn ~/sway-dotfiles/.config/ghostty ~/.config/ghostty
    ln -sfn ~/sway-dotfiles/.config/rofi ~/.config/rofi
+   ln -sfn ~/sway-dotfiles/.config/nvim ~/.config/nvim
    ln -sf ~/sway-dotfiles/.zshrc ~/.zshrc
    ```
 
@@ -301,6 +304,10 @@ sway-dotfiles/
 │   ├── ghostty/             # Ghostty terminal config & Catppuccin themes
 │   │   ├── config
 │   │   └── themes/
+│   ├── nvim/                # Neovim configuration (LazyVim, LSP, Catppuccin)
+│   │   ├── init.lua
+│   │   ├── lazyvim.json
+│   │   └── lua/
 │   ├── quickshell/          # Quickshell status bar config (QtQuick/QML)
 │   │   └── shell.qml
 │   ├── rofi/                # Rofi application launcher config
