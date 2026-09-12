@@ -1,0 +1,213 @@
+# Starship configuration to faithfully emulate the Powerlevel10k "Lean" theme
+# Reference: romkatv/powerlevel10k lean configuration (nerdfont-v3, 24h time, 1 line, sparse)
+# Sourced from: https://raw.githubusercontent.com/dewwripper/dotfiles/f359f956c33fb99a91bfded80ab7caf700290e98/.p10k.zsh
+
+# Empty line before each prompt (matches POWERLEVEL9K_PROMPT_ADD_NEWLINE=true)
+add_newline = true
+
+# Left prompt layout:
+# Equivalent to POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir vcs prompt_char)
+format = """$directory$git_branch$git_status$character"""
+
+# Right prompt layout:
+# Equivalent to POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS
+right_format = """$status$cmd_duration$jobs$direnv$python$nodejs$golang$rust$java$ruby$php$kubernetes$terraform$aws$azure$gcloud$docker_context$nix_shell$username$hostname$time"""
+
+# -----------------------------------------------------------------------------
+# Prompt Character / Vi-Mode (matches POWERLEVEL9K_PROMPT_CHAR_*)
+# Success: 76 (green), Error: 196 (red)
+# Insert: ❯ | Command: ❮ | Visual: V | Overwrite: ▶
+# -----------------------------------------------------------------------------
+[character]
+success_symbol = "[❯](bold 76)"
+error_symbol = "[❯](bold 196)"
+vimcmd_symbol = "[❮](bold 76)"
+vimcmd_replace_one_symbol = "[▶](bold 76)"
+vimcmd_replace_symbol = "[▶](bold 76)"
+vimcmd_visual_symbol = "[V](bold 76)"
+
+# -----------------------------------------------------------------------------
+# Current Directory (matches POWERLEVEL9K_DIR_*)
+# Base color: 31 (cyan), Anchor/Git repo root: 39 (blue), Read-only: 196 (red)
+# -----------------------------------------------------------------------------
+[directory]
+style = "bold 31"
+repo_root_style = "bold 39"
+truncation_length = 3
+truncate_to_repo = true
+truncation_symbol = "…/"
+read_only = " 󰌾"
+read_only_style = "bold 196"
+format = "[$path]($style)[$read_only]($read_only_style) "
+
+# -----------------------------------------------------------------------------
+# Git / VCS (matches my_git_formatter in .p10k.zsh)
+# Clean: 76 | Modified: 178 | Untracked: 39 | Conflicted: 196
+# Ahead: ⇡ | Behind: ⇣ | Stashes: * | Conflicted: ~ | Untracked: ? | Staged: + | Unstaged: !
+# -----------------------------------------------------------------------------
+[git_branch]
+symbol = ""
+style = "bold 76"
+format = "[$symbol$branch(:$remote_branch)]($style) "
+
+[git_status]
+style = "bold 178"
+format = '([$all_status$ahead_behind]($style) )'
+conflicted = "[~$count](bold 196) "
+ahead = "[⇡$count](bold 76) "
+behind = "[⇣$count](bold 76) "
+diverged = "[⇡$ahead_count](bold 76)[⇣$behind_count](bold 76) "
+untracked = "[?$count](bold 39) "
+stashed = "[*$count](bold 76) "
+modified = "[!$count](bold 178) "
+staged = "[+$count](bold 178) "
+renamed = "[»$count](bold 178) "
+deleted = "[✘$count](bold 196) "
+
+# -----------------------------------------------------------------------------
+# Execution Time (matches POWERLEVEL9K_COMMAND_EXECUTION_TIME_*)
+# Foreground: 101, Threshold: 3s, Precision: 0, No visual icon
+# -----------------------------------------------------------------------------
+[cmd_duration]
+min_time = 3_000
+style = "101"
+format = "[$duration]($style) "
+show_milliseconds = false
+
+# -----------------------------------------------------------------------------
+# Command Status / Exit Code (matches POWERLEVEL9K_STATUS_*)
+# Hidden when success (OK=false), red cross on error: 160
+# -----------------------------------------------------------------------------
+[status]
+disabled = false
+style = "bold 160"
+symbol = "✘"
+format = "[$symbol $status]($style) "
+pipestatus = true
+pipestatus_format = "[$pipestatus => $symbol $status]($style) "
+
+# -----------------------------------------------------------------------------
+# Background Jobs (matches POWERLEVEL9K_BACKGROUND_JOBS_*)
+# Foreground: 70
+# -----------------------------------------------------------------------------
+[jobs]
+symbol = "✦"
+style = "bold 70"
+format = "[$symbol$number]($style) "
+threshold = 1
+
+# -----------------------------------------------------------------------------
+# Direnv (matches POWERLEVEL9K_DIRENV_*)
+# Foreground: 178
+# -----------------------------------------------------------------------------
+[direnv]
+disabled = false
+style = "bold 178"
+symbol = "direnv "
+format = "[$symbol$loaded]($style) "
+
+# -----------------------------------------------------------------------------
+# Programming Languages & Runtimes (matches p10k foreground mappings)
+# -----------------------------------------------------------------------------
+[nodejs]
+symbol = "󰎔 "
+style = "bold 70"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["js", "mjs", "cjs", "ts", "mts", "cts"]
+
+[python]
+symbol = "󰌠 "
+style = "bold 37"
+format = '[$symbol$pyenv_prefix($version )(\($virtualenv\) )]($style)'
+
+[golang]
+symbol = "󰟓 "
+style = "bold 37"
+format = "[$symbol($version )]($style)"
+
+[rust]
+symbol = "󱘗 "
+style = "bold 37"
+format = "[$symbol($version )]($style)"
+
+[java]
+symbol = "󰬷 "
+style = "bold 32"
+format = "[$symbol($version )]($style)"
+
+[ruby]
+symbol = " "
+style = "bold 168"
+format = "[$symbol($version )]($style)"
+
+[php]
+symbol = "󰌟 "
+style = "bold 99"
+format = "[$symbol($version )]($style)"
+
+# -----------------------------------------------------------------------------
+# Cloud & DevOps (matches p10k kubecontext, terraform, aws, azure, gcloud)
+# -----------------------------------------------------------------------------
+[kubernetes]
+disabled = false
+symbol = "󱃾 "
+style = "bold 134"
+format = '[$symbol$context( \($namespace\))]($style) '
+
+[terraform]
+symbol = "󱁢 "
+style = "bold 38"
+format = "[$symbol$workspace]($style) "
+
+[aws]
+symbol = " "
+style = "bold 208"
+format = '[$symbol$profile( \($region\))]($style) '
+
+[azure]
+disabled = false
+symbol = "󰠅 "
+style = "bold 32"
+format = "[$symbol$subscription]($style) "
+
+[gcloud]
+symbol = "󱇶 "
+style = "bold 32"
+format = '[$symbol$account(@$project)]($style) '
+
+[docker_context]
+symbol = "󰡨 "
+style = "bold 38"
+format = "[$symbol$context]($style) "
+
+[nix_shell]
+symbol = "󱄅 "
+style = "bold 74"
+format = "[$symbol$state]($style) "
+
+# -----------------------------------------------------------------------------
+# Context / Hostname & Username (matches POWERLEVEL9K_CONTEXT_*)
+# Only displayed when logged in as root or over an SSH connection
+# User style: 180 (root: bold 178), Host style: 180
+# -----------------------------------------------------------------------------
+[username]
+show_always = false
+style_user = "180"
+style_root = "bold 178"
+format = "[$user]($style)"
+
+[hostname]
+ssh_only = true
+style = "180"
+format = "[@$hostname]($style) "
+trim_at = "."
+
+# -----------------------------------------------------------------------------
+# Time (matches POWERLEVEL9K_TIME_*)
+# Foreground: 66, Format: %H:%M:%S (24h time), No icon
+# -----------------------------------------------------------------------------
+[time]
+disabled = false
+time_format = "%T"
+style = "66"
+format = "[$time]($style)"
