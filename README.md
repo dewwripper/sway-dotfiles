@@ -13,7 +13,7 @@ A clean, modern, and high-performance Wayland desktop environment setup powered 
 | **Terminal** | [Ghostty](https://ghostty.org/) | Fast, feature-rich GPU-accelerated terminal |
 | **Editor** | [Neovim](https://neovim.io/) | Modern modal text editor configured with LazyVim & Catppuccin Mocha theme |
 | **App Launcher** | [Rofi](https://github.com/davatorium/rofi) | Application menu & window switcher |
-| **Shell & Prompt** | [Bash](https://www.gnu.org/software/bash/) + [Starship](https://starship.rs/) | Powerlevel10k Lean replica prompt, Vi mode, zoxide, eza, git completions |
+| **Shell & Prompt** | [Bash](https://www.gnu.org/software/bash/) + [Starship](https://starship.rs/) | Powerlevel10k Lean replica prompt, Vi mode, fzf (Catppuccin Mocha), zoxide, eza, git completions |
 | **Fonts** | JetBrains Mono & Hack Nerd Font | High-legibility coding fonts with complete icon glyphs |
 | **Audio / Media** | PipeWire / WirePlumber & Pavucontrol | Controlled via `wpctl`, GUI mixer via `pavucontrol`, and brightness via `brightnessctl` |
 
@@ -139,11 +139,11 @@ sudo snap install ghostty --classic
    curl -sS https://starship.rs/install.sh | sh -s -- -y
    ```
 
-2. **Install Shell Utilities (`eza`, `zoxide`, `bash-completion`)**:
-   These tools provide modern directory jumping, syntax-colored directory listing, and smart completions:
+2. **Install Shell Utilities (`fzf`, `ripgrep`, `fd-find`, `bat`, `eza`, `zoxide`, `bash-completion`)**:
+   These tools provide fuzzy searching, modern directory jumping, syntax-highlighted previews, and smart completions:
    ```bash
-   # Base shell completions
-   sudo apt install -y bash-completion
+   # Base shell completions, fuzzy finder & CLI tools
+   sudo apt install -y bash-completion fzf ripgrep fd-find bat
 
    # Install eza (modern ls replacement used in .bashrc aliases)
    sudo apt install -y eza || {
@@ -185,6 +185,7 @@ sudo snap install ghostty --classic
    [ -d ~/.config/rofi ] && mv ~/.config/rofi ~/.config/rofi.backup.$(date +%s)
    [ -d ~/.config/nvim ] && mv ~/.config/nvim ~/.config/nvim.backup.$(date +%s)
    [ -d ~/.config/starship ] && mv ~/.config/starship ~/.config/starship.backup.$(date +%s)
+   [ -d ~/.config/fzf ] && mv ~/.config/fzf ~/.config/fzf.backup.$(date +%s)
    [ -f ~/.bashrc ] && mv ~/.bashrc ~/.bashrc.backup.$(date +%s)
 
    # Link configurations
@@ -195,6 +196,7 @@ sudo snap install ghostty --classic
    ln -sfn ~/sway-dotfiles/.config/rofi ~/.config/rofi
    ln -sfn ~/sway-dotfiles/.config/nvim ~/.config/nvim
    ln -sfn ~/sway-dotfiles/.config/starship ~/.config/starship
+   ln -sfn ~/sway-dotfiles/.config/fzf ~/.config/fzf
    ln -sf ~/sway-dotfiles/.bashrc ~/.bashrc
    ```
 
@@ -296,10 +298,28 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
   - **Right-Click:** Immediate screen lock (`swaylock`).
   - **Dismiss:** Click outside or select any option to automatically close the dropdown.
 
+### 🔍 FZF (Fuzzy Finder) & Interactive Utilities
+FZF is configured with a **Catppuccin Mocha** palette, full **Vi-mode keybinding synchronization** (works in both insert and normal modes), and smart backend detection (`fd`/`fdfind`, `bat`/`batcat`, `eza`/`tree`, `rg`, `wl-copy`).
+
+| Keybinding / Command | Description |
+| :--- | :--- |
+| `Ctrl + t` | Fuzzy find files & directories, with live syntax-highlighted / tree preview |
+| `Ctrl + r` | Fuzzy search command history; press `Ctrl + y` to copy command to Wayland clipboard |
+| `Alt + c` | Fuzzy cd into subdirectories with `eza` tree preview |
+| `**<TAB>` | Fuzzy completion trigger for file paths, `cd`, `ssh`, `kill`, environment variables |
+| `fe [query]` | **Fuzzy Edit:** Interactively select file(s) with preview and open in `$EDITOR` (`nvim`) |
+| `fif [query]` | **Fuzzy Ripgrep:** Live interactive regex text search across repo with line jump in `$EDITOR` |
+| `fcd [dir]` | **Fuzzy CD:** Interactively browse and change directories with tree preview |
+| `fkill [signal]` | **Fuzzy Kill:** Interactive process manager showing CPU/MEM with process tree preview |
+| `fgb` | **Fuzzy Git Branch:** Switch local/remote branches with commit graph preview |
+| `fgl` | **Fuzzy Git Log:** Browse commit history; view diffs and copy commit SHA via `Ctrl + y` |
+| `fgst` | **Fuzzy Git Status:** Browse modified files; press `Ctrl + s` to stage/unstage |
+
 ### 🔄 Reloading Configurations
 - **Reload Sway:** Press `Super + Shift + c` (or run `swaymsg reload`).
 - **Restart Quickshell:** Run `pkill quickshell; quickshell &` (or detached with `quickshell -d`).
 - **Reload SwayNC:** Run `swaync-client -R && swaync-client -rs`.
+- **Reload Bash:** Run `source ~/.bashrc`.
 
 ---
 
@@ -308,6 +328,8 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
 ```text
 sway-dotfiles/
 ├── .config/
+│   ├── fzf/                 # Production-grade FZF bash configuration (Catppuccin Mocha)
+│   │   └── fzf.bash         # Previews, keybindings, Vi-mode sync, completion & workflows
 │   ├── ghostty/             # Ghostty terminal config & Catppuccin themes
 │   │   ├── config
 │   │   └── themes/

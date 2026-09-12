@@ -74,9 +74,18 @@ if [ -s "$NVM_DIR/bash_completion" ]; then
     . "$NVM_DIR/bash_completion"
 fi
 
+# Plugin: fzf (Fuzzy Finder - Catppuccin Mocha, Vi mode & workflows)
+if [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/fzf/fzf.bash" ]; then
+    . "${XDG_CONFIG_HOME:-$HOME/.config}/fzf/fzf.bash"
+elif [ -f "$HOME/.fzf.bash" ]; then
+    . "$HOME/.fzf.bash"
+fi
+
 # ------------------------------------------------------------------------------
 # Environment Variables
 # ------------------------------------------------------------------------------
+export EDITOR='nvim'
+export VISUAL='nvim'
 export REQUESTS_CA_BUNDLE=/usr/share/ca-certificates/azure_cli_cert.pem
 
 # Local binary/environment script if present
