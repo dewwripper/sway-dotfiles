@@ -1,17 +1,7 @@
 # ==============================================================================
-#  ~/.config/fzf/fzf.bash - Production-Grade FZF Configuration for Bash
+#  ~/.config/fzf/fzf.bash - FZF Shell Integration for Bash
+#  Reference: https://junegunn.github.io/fzf/shell-integration/
 #  Themed in Catppuccin Mocha | Optimized for Sway / Wayland / Ghostty
-# ==============================================================================
-#
-# Sections:
-#   1. Binary & Tool Detection (fd/fdfind, bat/batcat, eza/tree, rg, wl-copy)
-#   2. Catppuccin Mocha Palette & Global Default Options (FZF_DEFAULT_OPTS)
-#   3. File Indexing & Commands (FZF_DEFAULT_COMMAND, CTRL_T, ALT_C)
-#   4. Widget Options & Rich Previews (FZF_CTRL_T_OPTS, FZF_ALT_C_OPTS, FZF_CTRL_R_OPTS)
-#   5. Initialization (fzf --bash, key-bindings, completions)
-#   6. Vi-Mode Readline Keybinding Synchronization
-#   7. Fuzzy Completion Settings & Triggers (**<TAB>)
-#   8. Senior Workflow Functions & Aliases (fe, fif, fcd, fkill, fgb, fgl, fgst)
 # ==============================================================================
 
 # Return early if not running interactively
@@ -21,60 +11,8 @@ case $- in
 esac
 
 # ------------------------------------------------------------------------------
-# 1. Binary & Tool Detection
+# 1. Catppuccin Mocha Palette & Global Defaults
 # ------------------------------------------------------------------------------
-_fzf_has() { command -v "$1" &>/dev/null; }
-
-# Fast file finder: fd or fdfind (Ubuntu/Debian packages fd as fdfind)
-if _fzf_has fd; then
-    _FZF_FD_CMD="fd"
-elif _fzf_has fdfind; then
-    _FZF_FD_CMD="fdfind"
-else
-    _FZF_FD_CMD=""
-fi
-
-# Syntax-highlighted viewer: bat or batcat (Ubuntu/Debian packages bat as batcat)
-if _fzf_has bat; then
-    _FZF_BAT_CMD="bat"
-elif _fzf_has batcat; then
-    _FZF_BAT_CMD="batcat"
-else
-    _FZF_BAT_CMD=""
-fi
-
-# Directory tree visualizer: eza or tree
-if _fzf_has eza; then
-    _FZF_TREE_CMD="eza --tree --level=2 --color=always --icons --group-directories-first"
-elif _fzf_has tree; then
-    _FZF_TREE_CMD="tree -C -L 2"
-else
-    _FZF_TREE_CMD="ls -la --color=always"
-fi
-
-# Fast search engine: ripgrep
-if _fzf_has rg; then
-    _FZF_RG_CMD="rg"
-else
-    _FZF_RG_CMD=""
-fi
-
-# Clipboard utility for Wayland / Sway (fallback to X11 xclip)
-if _fzf_has wl-copy; then
-    _FZF_CLIP_CMD="wl-copy"
-elif _fzf_has xclip; then
-    _FZF_CLIP_CMD="xclip -selection clipboard"
-else
-    _FZF_CLIP_CMD=""
-fi
-
-# ------------------------------------------------------------------------------
-# 2. Catppuccin Mocha Palette & Global Default Options
-# ------------------------------------------------------------------------------
-# Catppuccin Mocha Color Palette:
-#   Base:        #1e1e2e    Surface0:    #313244    Surface1:    #45475a
-#   Text:        #cdd6f4    Mauve:       #cba6f7    Red:         #f38ba8
-#   Lavender:    #b4befe    Rosewater:   #f5e0dc    Sapphire:    #74c7ec
 export FZF_DEFAULT_OPTS=" \
     --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8 \
     --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
@@ -86,206 +24,102 @@ export FZF_DEFAULT_OPTS=" \
     --inline-info \
     --prompt='❯ ' \
     --pointer='◆ ' \
-    --marker='✓ ' \
-    --bind 'ctrl-/:toggle-preview' \
-    --bind 'ctrl-u:preview-half-page-up,ctrl-d:preview-half-page-down'"
+    --marker='✓ '"
 
 # ------------------------------------------------------------------------------
-# 3. File Indexing & Default Search Commands
-# ------------------------------------------------------------------------------
-if [[ -n "$_FZF_FD_CMD" ]]; then
-    # Respect .gitignore, index hidden files, exclude .git directory
-    export FZF_DEFAULT_COMMAND="$_FZF_FD_CMD --type f --hidden --follow --exclude .git"
-    export FZF_CTRL_T_COMMAND="$_FZF_FD_CMD --hidden --follow --exclude .git"
-    export FZF_ALT_C_COMMAND="$_FZF_FD_CMD --type d --hidden --follow --exclude .git"
-else
-    export FZF_DEFAULT_COMMAND="find . -mindepth 1 -not -path '*/.*' -type f"
-    export FZF_CTRL_T_COMMAND="find . -mindepth 1 -not -path '*/.*'"
-    export FZF_ALT_C_COMMAND="find . -mindepth 1 -not -path '*/.*' -type d"
-fi
-
-# ------------------------------------------------------------------------------
-# 4. Widget Options & Rich Previews
+# 2. Key Bindings Configuration (Refer: https://junegunn.github.io/fzf/shell-integration/)
 # ------------------------------------------------------------------------------
 
-# CTRL-T: Find files and directories with context-aware preview
-export FZF_CTRL_T_OPTS=" \
-    --preview 'if [ -d {} ]; then (eza --tree --level=2 --color=always --icons {} 2>/dev/null || tree -C -L 2 {} 2>/dev/null || ls -la --color=always {}); elif [ -f {} ]; then (bat --style=numbers --color=always --line-range :300 {} 2>/dev/null || batcat --style=numbers --color=always --line-range :300 {} 2>/dev/null || head -n 200 {}); else echo {}; fi' \
-    --preview-window=right:55%:hidden:wrap \
-    --header 'CTRL-/: Toggle preview | TAB: Multi-select | Enter: Insert path'"
-
-# ALT-C: Directory navigation with tree preview
-export FZF_ALT_C_OPTS=" \
-    --preview 'eza --tree --level=2 --color=always --icons {} 2>/dev/null || tree -C -L 2 {} 2>/dev/null || ls -la --color=always {}' \
-    --preview-window=right:50%:hidden:wrap \
-    --header 'CTRL-/: Toggle preview | Enter: cd into directory'"
-
-# CTRL-R: Command history search with preview and Wayland clipboard copy
-_clip_pipeline="printf \"%s\" {2..} | (${_FZF_CLIP_CMD:-wl-copy} 2>/dev/null)"
+# CTRL-R: Paste the selected command from history onto the command-line
+# - Press CTRL-R again to toggle chronological vs relevance sorting
+# - Press CTRL-/ to toggle line wrapping and see the whole command
+# - CTRL-Y to copy the command into clipboard using wl-copy (Wayland) / xclip (X11)
+_fzf_clip_cmd="wl-copy 2>/dev/null || xclip -selection clipboard 2>/dev/null"
 export FZF_CTRL_R_OPTS=" \
-    --preview 'echo {}' \
-    --preview-window=down:3:hidden:wrap \
-    --bind 'ctrl-y:execute-silent($_clip_pipeline)+abort' \
-    --header 'CTRL-Y: Copy command | CTRL-/: Toggle wrap preview | Enter: Run command'"
-unset _clip_pipeline
+    --bind 'ctrl-y:execute-silent(echo -n {2..} | ($_fzf_clip_cmd))+abort' \
+    --color header:italic \
+    --header 'Press CTRL-Y to copy command into clipboard'"
+unset _fzf_clip_cmd
+
+# CTRL-T: Paste the selected files and directories onto the command-line
+# - The list is generated using `--walker file,dir,follow,hidden` option
+# - Skip .git, node_modules, target
+# - Preview file content using bat / batcat (with fallback to head)
+# - Press CTRL-/ to toggle / change preview window
+export FZF_CTRL_T_OPTS=" \
+    --walker-skip .git,node_modules,target \
+    --preview 'bat -n --color=always {} 2>/dev/null || batcat -n --color=always {} 2>/dev/null || head -n 200 {}' \
+    --bind 'ctrl-/:change-preview-window(down|hidden|)'"
+
+# ALT-C: cd into the selected directory
+# - The list is generated using `--walker dir,follow,hidden` option
+# - Skip .git, node_modules, target
+# - Preview directory tree using tree / eza
+export FZF_ALT_C_OPTS=" \
+    --walker-skip .git,node_modules,target \
+    --preview 'tree -C {} 2>/dev/null || eza --tree --level=2 --color=always {} 2>/dev/null || ls -la {}'"
 
 # ------------------------------------------------------------------------------
-# 5. Initialization (Completions & Keybindings)
+# 3. Setting Up Shell Integration (eval "$(fzf --bash)")
 # ------------------------------------------------------------------------------
-if _fzf_has fzf; then
-    # Modern fzf (0.48.0+) provides self-contained bash integration
-    if fzf --bash &>/dev/null; then
-        eval "$(fzf --bash)"
-    else
-        # Fallback discovery for distribution packages & manual installs
-        # Key bindings
-        for _kb in \
-            "/usr/share/doc/fzf/examples/key-bindings.bash" \
-            "/usr/share/fzf/key-bindings.bash" \
-            "/usr/share/fzf/shell/key-bindings.bash" \
-            "/etc/profile.d/fzf-key-bindings.bash" \
-            "$HOME/.fzf/shell/key-bindings.bash"; do
-            if [[ -f "$_kb" ]]; then
-                # shellcheck source=/dev/null
-                source "$_kb"
+# As documented in https://junegunn.github.io/fzf/shell-integration/
+# `eval "$(fzf --bash)"` automatically configures key bindings (CTRL-T, CTRL-R,
+# ALT-C) for both emacs and vi modes (vi-insert, vi-command) as well as fuzzy completion.
+if command -v fzf &>/dev/null; then
+    if ! eval "$(fzf --bash 2>/dev/null)"; then
+        # Fallback for fzf versions < 0.48.0
+        for _f in /usr/share/doc/fzf/examples/key-bindings.bash \
+                  /usr/share/fzf/key-bindings.bash \
+                  /etc/profile.d/fzf-key-bindings.bash \
+                  "$HOME/.fzf/shell/key-bindings.bash"; do
+            if [[ -f "$_f" ]]; then
+                . "$_f"
                 break
             fi
         done
 
-        # Completions
-        for _comp in \
-            "/usr/share/doc/fzf/examples/completion.bash" \
-            "/usr/share/fzf/completion.bash" \
-            "/usr/share/fzf/shell/completion.bash" \
-            "/usr/share/bash-completion/completions/fzf" \
-            "/etc/bash_completion.d/fzf" \
-            "$HOME/.fzf/shell/completion.bash"; do
-            if [[ -f "$_comp" ]]; then
-                # shellcheck source=/dev/null
-                source "$_comp"
+        for _f in /usr/share/doc/fzf/examples/completion.bash \
+                  /usr/share/fzf/completion.bash \
+                  /usr/share/bash-completion/completions/fzf \
+                  /etc/bash_completion.d/fzf \
+                  "$HOME/.fzf/shell/completion.bash"; do
+            if [[ -f "$_f" ]]; then
+                . "$_f"
                 break
             fi
         done
-        unset _kb _comp
+        unset _f
     fi
 fi
 
 # ------------------------------------------------------------------------------
-# 6. Vi-Mode Readline Keybinding Synchronization
-# ------------------------------------------------------------------------------
-# When `set -o vi` is enabled in Bash, Readline binds to `vi-insert` and
-# `vi-command` modes instead of `emacs-standard`. Ensure seamless operation:
-if [[ -t 0 ]] && [[ -o vi ]]; then
-    # CTRL-R: Fuzzy history search
-    if declare -F __fzf_history__ &>/dev/null; then
-        bind -m vi-insert -x '"\C-r": __fzf_history__' 2>/dev/null
-        bind -m vi-command -x '"\C-r": __fzf_history__' 2>/dev/null
-    fi
-
-    # CTRL-T: Fuzzy file insertion
-    if declare -F __fzf_select__ &>/dev/null; then
-        bind -m vi-insert -x '"\C-t": __fzf_select__' 2>/dev/null
-        bind -m vi-command -x '"\C-t": __fzf_select__' 2>/dev/null
-    elif declare -F fzf-file-widget &>/dev/null; then
-        bind -m vi-insert -x '"\C-t": fzf-file-widget' 2>/dev/null
-        bind -m vi-command -x '"\C-t": fzf-file-widget' 2>/dev/null
-    fi
-
-    # ALT-C: Fuzzy cd navigation
-    if declare -F __fzf_cd__ &>/dev/null; then
-        bind -m vi-insert -x '"\ec": __fzf_cd__' 2>/dev/null
-        bind -m vi-command -x '"\ec": __fzf_cd__' 2>/dev/null
-    elif declare -F fzf-cd-widget &>/dev/null; then
-        bind -m vi-insert -x '"\ec": fzf-cd-widget' 2>/dev/null
-        bind -m vi-command -x '"\ec": fzf-cd-widget' 2>/dev/null
-    fi
-fi
-
-# ------------------------------------------------------------------------------
-# 7. Fuzzy Completion Settings & Triggers (**<TAB>)
-# ------------------------------------------------------------------------------
-# Options for default completion trigger (e.g., `code **<TAB>`, `cd **<TAB>`)
-export FZF_COMPLETION_TRIGGER='**'
-
-# Path generator using fd if available
-_fzf_compgen_path() {
-    if [[ -n "$_FZF_FD_CMD" ]]; then
-        "$_FZF_FD_CMD" --hidden --follow --exclude ".git" . "$1"
-    else
-        find "$1" -path '*/.*' -prune -o -type f -print -o -type d -print | sed -e 's@^\./@@'
-    fi
-}
-
-# Directory generator using fd if available
-_fzf_compgen_dir() {
-    if [[ -n "$_FZF_FD_CMD" ]]; then
-        "$_FZF_FD_CMD" --type d --hidden --follow --exclude ".git" . "$1"
-    else
-        find "$1" -path '*/.*' -prune -o -type d -print | sed -e 's@^\./@@'
-    fi
-}
-
-# Context-aware completion runner with preview
-_fzf_comprun() {
-    local command=$1
-    shift
-
-    case "$command" in
-        cd)
-            fzf --preview 'eza --tree --level=2 --color=always --icons {} 2>/dev/null || tree -C -L 2 {} 2>/dev/null || ls -la --color=always {}' "$@" ;;
-        export|unset)
-            fzf --preview "eval 'echo \${}'" "$@" ;;
-        ssh)
-            fzf --preview 'dig {} 2>/dev/null || host {} 2>/dev/null' "$@" ;;
-        kill|pkill)
-            fzf --preview 'ps -fp {} 2>/dev/null || ps aux | grep {}' "$@" ;;
-        *)
-            fzf --preview 'if [ -d {} ]; then (eza --tree --level=2 --color=always --icons {} 2>/dev/null || tree -C -L 2 {} 2>/dev/null || ls -la --color=always {}); elif [ -f {} ]; then (bat --style=numbers --color=always --line-range :300 {} 2>/dev/null || batcat --style=numbers --color=always --line-range :300 {} 2>/dev/null || head -n 200 {}); else echo {}; fi' "$@" ;;
-    esac
-}
-
-# ------------------------------------------------------------------------------
-# 8. Senior Workflow Functions & Aliases
+# 4. Helper Functions & Aliases
 # ------------------------------------------------------------------------------
 
-# fe [query] - Fuzzy edit file(s) with preview in $EDITOR (Neovim)
+# fe [query] - Fuzzy edit file(s) in $EDITOR
 fe() {
-    local editor="${EDITOR:-nvim}"
     local files=()
-    local preview_cmd='if [ -d {} ]; then (eza --tree --level=2 --color=always --icons {} 2>/dev/null || tree -C -L 2 {} 2>/dev/null || ls -la --color=always {}); elif [ -f {} ]; then (bat --style=numbers --color=always --line-range :300 {} 2>/dev/null || batcat --style=numbers --color=always --line-range :300 {} 2>/dev/null || head -n 200 {}); else echo {}; fi'
-
     mapfile -t files < <(
         fzf --query="$1" \
             --multi \
             --select-1 \
             --exit-0 \
-            --preview "$preview_cmd" \
-            --preview-window=right:55%:wrap \
-            --header 'Tab: Multi-select | Enter: Edit | Esc: Cancel'
+            --preview 'bat -n --color=always {} 2>/dev/null || batcat -n --color=always {} 2>/dev/null || tree -C {} 2>/dev/null || head -n 200 {}'
     )
-
-    if [[ ${#files[@]} -gt 0 ]]; then
-        "$editor" "${files[@]}"
-    fi
+    [[ ${#files[@]} -gt 0 ]] && "${EDITOR:-nvim}" "${files[@]}"
 }
 
 # fif [query] - Interactive ripgrep live search with syntax preview and jump to line
 fif() {
-    if [[ -z "$_FZF_RG_CMD" ]]; then
+    if ! command -v rg &>/dev/null; then
         echo "fif error: ripgrep (rg) is not installed." >&2
         return 1
     fi
 
     local editor="${EDITOR:-nvim}"
     local initial_query="${*:-}"
-    local rg_prefix="$_FZF_RG_CMD --column --line-number --no-heading --color=always --smart-case --hidden --glob '!.git'"
-    local preview_script
-
-    if [[ -n "$_FZF_BAT_CMD" ]]; then
-        preview_script="$_FZF_BAT_CMD --color=always --style=numbers --highlight-line {2} {1} 2>/dev/null || cat {1}"
-    else
-        preview_script="head -n 200 {1}"
-    fi
+    local rg_prefix="rg --column --line-number --no-heading --color=always --smart-case --hidden --glob '!.git'"
+    local preview_script="bat --color=always --style=numbers --highlight-line {2} {1} 2>/dev/null || batcat --color=always --style=numbers --highlight-line {2} {1} 2>/dev/null || head -n 200 {1}"
 
     local selection
     selection=$(
@@ -309,20 +143,16 @@ fif() {
     fi
 }
 
-# fcd [path] - Fuzzy cd into any directory (including hidden directories)
+# fcd [path] - Fuzzy cd into any directory
 fcd() {
     local target_dir
-    local search_path="${1:-.}"
-    local tree_cmd='eza --tree --level=2 --color=always --icons {} 2>/dev/null || tree -C -L 2 {} 2>/dev/null || ls -la --color=always {}'
-
-    if [[ -n "$_FZF_FD_CMD" ]]; then
-        target_dir=$("$_FZF_FD_CMD" --type d --hidden --follow --exclude .git . "$search_path" | \
-            fzf +m --preview "$tree_cmd" --preview-window=right:50%:wrap --header 'Select directory to cd')
-    else
-        target_dir=$(find "$search_path" -type d -not -path '*/.*' | \
-            fzf +m --preview "$tree_cmd" --preview-window=right:50%:wrap --header 'Select directory to cd')
-    fi
-
+    target_dir=$(
+        fzf --walker=dir,follow,hidden \
+            --walker-skip=.git,node_modules,target \
+            +m \
+            --preview 'tree -C {} 2>/dev/null || eza --tree --level=2 --color=always {} 2>/dev/null || ls -la {}' \
+            --header 'Select directory to cd'
+    )
     if [[ -n "$target_dir" ]]; then
         cd "$target_dir" || return 1
     fi
@@ -374,7 +204,7 @@ fgl() {
         git log --graph --color=always --format="%C(auto)%h%d %s %C(black)%C(bold)%cr" | \
         fzf --ansi --no-sort --reverse --tiebreak=index \
             --header 'Enter: View full commit | CTRL-Y: Copy commit SHA' \
-            --bind 'ctrl-y:execute-silent(grep -o "[a-f0-9]\{7,\}" <<< {} | head -n1 | ('"${_FZF_CLIP_CMD:-wl-copy}"' 2>/dev/null))+abort' \
+            --bind 'ctrl-y:execute-silent(grep -o "[a-f0-9]\{7,\}" <<< {} | head -n1 | (wl-copy 2>/dev/null || xclip -selection clipboard 2>/dev/null))+abort' \
             --preview 'grep -o "[a-f0-9]\{7,\}" <<< {} | head -n1 | xargs git show --color=always' \
             --preview-window=right:60%:wrap
     )

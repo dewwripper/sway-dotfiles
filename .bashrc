@@ -74,11 +74,15 @@ if [ -s "$NVM_DIR/bash_completion" ]; then
     . "$NVM_DIR/bash_completion"
 fi
 
-# Plugin: fzf (Fuzzy Finder - Catppuccin Mocha, Vi mode & workflows)
+# Plugin: fzf (Fuzzy Finder - https://junegunn.github.io/fzf/shell-integration/)
 if [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/fzf/fzf.bash" ]; then
     . "${XDG_CONFIG_HOME:-$HOME/.config}/fzf/fzf.bash"
+elif [ -f "$HOME/sway-dotfiles/.config/fzf/fzf.bash" ]; then
+    . "$HOME/sway-dotfiles/.config/fzf/fzf.bash"
 elif [ -f "$HOME/.fzf.bash" ]; then
     . "$HOME/.fzf.bash"
+elif command -v fzf &>/dev/null; then
+    eval "$(fzf --bash)"
 fi
 
 # ------------------------------------------------------------------------------

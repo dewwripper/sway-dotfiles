@@ -299,7 +299,7 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
   - **Dismiss:** Click outside or select any option to automatically close the dropdown.
 
 ### 🔍 FZF (Fuzzy Finder) & Interactive Utilities
-FZF is configured with a **Catppuccin Mocha** palette, full **Vi-mode keybinding synchronization** (works in both insert and normal modes), and smart backend detection (`fd`/`fdfind`, `bat`/`batcat`, `eza`/`tree`, `rg`, `wl-copy`).
+FZF shell integration is configured following the official upstream standard (`eval "$(fzf --bash)"`), themed with a **Catppuccin Mocha** palette, built-in `--walker-skip` options, preview toggles (`Ctrl + /`), Wayland clipboard integration (`Ctrl + y`), and Vi-mode compatibility.
 
 | Keybinding / Command | Description |
 | :--- | :--- |
