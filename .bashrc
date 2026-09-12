@@ -38,6 +38,7 @@ fi
 # ------------------------------------------------------------------------------
 # Prompt - Starship (Replacing Powerlevel10k / p10k prompt)
 # ------------------------------------------------------------------------------
+export STARSHIP_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/starship/starship.toml"
 if command -v starship &>/dev/null; then
     eval "$(starship init bash)"
 fi
