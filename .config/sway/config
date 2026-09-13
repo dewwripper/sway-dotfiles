@@ -234,5 +234,7 @@ bindsym $mod+r mode "resize"
 #     }
 # }
 
+exec ~/.config/sway/startup-ws1.sh ghostty
+
 # include /etc/sway/config.d/*
 include ~/.config/sway/config.d/*
