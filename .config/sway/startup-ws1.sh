@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-TERM_CMD="${1:-foot}"
+#!/usr/bin/env zsh
+TERM_CMD="${1:-ghostty}"
 
 win_count() {
   swaymsg -t get_tree | jq '[recurse(.nodes[], .floating_nodes[])

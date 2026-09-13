@@ -1,6 +1,6 @@
 # Sway Dotfiles for Ubuntu 26.04
 
-A clean, modern, and high-performance Wayland desktop environment setup powered by **Sway**, **Quickshell**, **Ghostty**, and **Bash** with **Starship** prompt (faithfully replicating the Powerlevel10k Lean theme, Catppuccin Mocha theme & Nerd Fonts).
+A clean, modern, and high-performance Wayland desktop environment setup powered by **Sway**, **Quickshell**, **Ghostty**, and **Zsh** with **Starship** prompt (faithfully replicating the Powerlevel10k Lean theme, Catppuccin Mocha theme & Nerd Fonts).
 
 ---
 
@@ -13,7 +13,7 @@ A clean, modern, and high-performance Wayland desktop environment setup powered 
 | **Terminal** | [Ghostty](https://ghostty.org/) | Fast, feature-rich GPU-accelerated terminal |
 | **Editor** | [Neovim](https://neovim.io/) | Modern modal text editor configured with LazyVim & Catppuccin Mocha theme |
 | **App Launcher** | [Rofi](https://github.com/davatorium/rofi) | Application menu & window switcher |
-| **Shell & Prompt** | [Bash](https://www.gnu.org/software/bash/) + [Starship](https://starship.rs/) | Powerlevel10k Lean replica prompt, Vi mode, fzf (Catppuccin Mocha), zoxide, eza, git completions |
+| **Shell & Prompt** | [Zsh](https://www.zsh.org/) + [Starship](https://starship.rs/) | Powerlevel10k Lean replica prompt, Vi mode, fzf (Catppuccin Mocha), zoxide, eza, git completions |
 | **Fonts** | JetBrains Mono & Hack Nerd Font | High-legibility coding fonts with complete icon glyphs |
 | **Audio / Media** | PipeWire / WirePlumber & Pavucontrol | Controlled via `wpctl`, GUI mixer via `pavucontrol`, and brightness via `brightnessctl` |
 
@@ -131,21 +131,39 @@ sudo snap install ghostty --classic
 
 ---
 
-### Step 5: Install & Configure Bash with Starship and CLI Tools
+### Step 5: Install & Configure Zsh with Starship and CLI Tools
 
-1. **Install Starship Prompt**:
+1. **Install Zsh and change default shell**:
+   ```bash
+   sudo apt install -y zsh
+   chsh -s $(which zsh)
+   ```
+
+2. **Install Starship Prompt**:
    Starship is a fast, zero-config, highly customizable prompt configured to faithfully emulate your Powerlevel10k Lean theme:
    ```bash
    curl -sS https://starship.rs/install.sh | sh -s -- -y
    ```
 
-2. **Install Shell Utilities (`fzf`, `ripgrep`, `fd-find`, `bat`, `eza`, `zoxide`, `bash-completion`)**:
+3. **Install Oh My Zsh & Recommended Plugins** (optional, supported):
+   ```bash
+   # Oh My Zsh
+   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+
+   # zsh-autosuggestions
+   git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+
+   # zsh-nvm
+   git clone https://github.com/lukechilds/zsh-nvm ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-nvm
+   ```
+
+4. **Install Shell Utilities (`fzf`, `ripgrep`, `fd-find`, `bat`, `eza`, `zoxide`)**:
    These tools provide fuzzy searching, modern directory jumping, syntax-highlighted previews, and smart completions:
    ```bash
-   # Base shell completions, fuzzy finder & CLI tools
-   sudo apt install -y bash-completion fzf ripgrep fd-find bat
+   # Base shell utilities & CLI tools
+   sudo apt install -y fzf ripgrep fd-find bat
 
-   # Install eza (modern ls replacement used in .bashrc aliases)
+   # Install eza (modern ls replacement used in aliases)
    sudo apt install -y eza || {
        sudo mkdir -p /etc/apt/keyrings
        wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
@@ -158,7 +176,7 @@ sudo snap install ghostty --classic
    curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
    ```
 
-3. **Install NVM (Node Version Manager)**:
+5. **Install NVM (Node Version Manager)**:
    ```bash
    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
    ```
@@ -186,7 +204,7 @@ sudo snap install ghostty --classic
    [ -d ~/.config/nvim ] && mv ~/.config/nvim ~/.config/nvim.backup.$(date +%s)
    [ -d ~/.config/starship ] && mv ~/.config/starship ~/.config/starship.backup.$(date +%s)
    [ -d ~/.config/fzf ] && mv ~/.config/fzf ~/.config/fzf.backup.$(date +%s)
-   [ -f ~/.bashrc ] && mv ~/.bashrc ~/.bashrc.backup.$(date +%s)
+   [ -f ~/.zshrc ] && mv ~/.zshrc ~/.zshrc.backup.$(date +%s)
 
    # Link configurations
    ln -sfn ~/sway-dotfiles/.config/sway ~/.config/sway
@@ -197,7 +215,7 @@ sudo snap install ghostty --classic
    ln -sfn ~/sway-dotfiles/.config/nvim ~/.config/nvim
    ln -sfn ~/sway-dotfiles/.config/starship ~/.config/starship
    ln -sfn ~/sway-dotfiles/.config/fzf ~/.config/fzf
-   ln -sf ~/sway-dotfiles/.bashrc ~/.bashrc
+   ln -sf ~/sway-dotfiles/.zshrc ~/.zshrc
    ```
 
 ---
@@ -209,7 +227,8 @@ sudo snap install ghostty --classic
    ```bash
    sway
    ```
-3. Ghostty will launch Bash with the custom Starship prompt preloaded from `~/.config/starship/starship.toml`.
+3. Ghostty will launch Zsh with the custom Starship prompt preloaded from `~/.config/starship/starship.toml`.
+
 
 ---
 
@@ -319,7 +338,7 @@ FZF shell integration is configured following the official upstream standard (`e
 - **Reload Sway:** Press `Super + Shift + c` (or run `swaymsg reload`).
 - **Restart Quickshell:** Run `pkill quickshell; quickshell &` (or detached with `quickshell -d`).
 - **Reload SwayNC:** Run `swaync-client -R && swaync-client -rs`.
-- **Reload Bash:** Run `source ~/.bashrc`.
+- **Reload Zsh:** Run `source ~/.zshrc`.
 
 ---
 
@@ -328,9 +347,10 @@ FZF shell integration is configured following the official upstream standard (`e
 ```text
 sway-dotfiles/
 ├── .config/
-│   ├── fzf/                 # Production-grade FZF bash configuration (Catppuccin Mocha)
-│   │   └── fzf.bash         # Previews, keybindings, Vi-mode sync, completion & workflows
-│   ├── ghostty/             # Ghostty terminal config & Catppuccin themes
+│   ├── fzf/                 # Production-grade FZF configuration (Catppuccin Mocha)
+│   │   ├── fzf.zsh          # Zsh keybindings, previews, completion & workflows
+│   │   └── fzf.bash         # (Optional) Bash FZF configuration
+│   ├── ghostty/             # Ghostty terminal config (default shell: zsh) & themes
 │   │   ├── config
 │   │   └── themes/
 │   ├── nvim/                # Neovim configuration (LazyVim, LSP, Catppuccin)
@@ -345,14 +365,15 @@ sway-dotfiles/
 │   │   └── starship.toml    # Powerlevel10k Lean replica theme
 │   ├── sway/                # Sway window manager config
 │   │   ├── config
-│   │   └── config.d/        # Modular configs (audio, brightness, bar, notifications, etc.)
+│   │   ├── config.d/        # Modular configs (audio, brightness, bar, notifications, etc.)
+│   │   └── startup-ws1.sh   # Workspace 1 terminal startup layout script (zsh)
 │   ├── swaync/              # SwayNotificationCenter config & Catppuccin Mocha CSS
 │   │   ├── config.json
 │   │   └── style.css
 │   └── waybar/              # (Optional) Waybar status bar config & Catppuccin CSS
 │       ├── config.jsonc
 │       └── style.css
-├── .bashrc                  # Bash configuration (Starship, Vi mode, completions, aliases)
-├── .zshrc                   # (Optional) Zsh configuration
+├── .zshrc                   # Zsh configuration (Starship prompt, Vi mode, OMZ, fzf, zoxide, aliases)
+├── .bashrc                  # (Optional) Bash configuration
 └── README.md                # Installation and usage guide
 ```

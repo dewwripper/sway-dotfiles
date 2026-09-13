@@ -4,3 +4,6 @@ font-size = 15
 
 # Optional: Set a color theme (e.g., tokyo-night, catppuccin-mocha, nord, dracula)
 theme = catppuccin-mocha 
+
+# Default Shell
+command = zsh

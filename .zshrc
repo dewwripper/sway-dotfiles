@@ -1,21 +1,9 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
-
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
-# Set name of the theme to load --- if set to "random", it will
-# load a random theme each time Oh My Zsh is loaded, in which case,
-# to know which specific one was loaded, run: echo $RANDOM_THEME
-# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="powerlevel10k/powerlevel10k"
+# Set name of the theme to load --- set to "" since prompt is managed by Starship
+ZSH_THEME=""
+
 
 bindkey -v
 export KEYTIMEOUT=1
@@ -84,19 +72,42 @@ plugins=(git z zsh-autosuggestions zsh-nvm)
 
 source $ZSH/oh-my-zsh.sh
 
+# ------------------------------------------------------------------------------
+# Prompt - Starship (Replacing Powerlevel10k / p10k prompt)
+# ------------------------------------------------------------------------------
+export STARSHIP_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/starship/starship.toml"
+if command -v starship &>/dev/null; then
+    eval "$(starship init zsh)"
+fi
+
+# ------------------------------------------------------------------------------
+# Plugins & Tool Integrations (zoxide, fzf)
+# ------------------------------------------------------------------------------
+
+# Plugin: z (autojump/directory navigation)
+if command -v zoxide &>/dev/null; then
+    eval "$(zoxide init zsh)"
+fi
+
+# Plugin: fzf (Fuzzy Finder - https://junegunn.github.io/fzf/shell-integration/)
+if [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/fzf/fzf.zsh" ]; then
+    . "${XDG_CONFIG_HOME:-$HOME/.config}/fzf/fzf.zsh"
+elif [ -f "$HOME/sway-dotfiles/.config/fzf/fzf.zsh" ]; then
+    . "$HOME/sway-dotfiles/.config/fzf/fzf.zsh"
+elif [ -f "$HOME/.fzf.zsh" ]; then
+    . "$HOME/.fzf.zsh"
+elif command -v fzf &>/dev/null; then
+    eval "$(fzf --zsh)"
+fi
+
 # User configuration
+export EDITOR='nvim'
+export VISUAL='nvim'
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
-
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='nvim'
-# fi
 
 # Compilation flags
 # export ARCHFLAGS="-arch $(uname -m)"
@@ -151,6 +162,3 @@ zstyle ':bracketed-paste-magic' active-widgets '.self-*'
 
 
 . "$HOME/.local/bin/env"
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
