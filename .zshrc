@@ -73,6 +73,22 @@ plugins=(git z zsh-autosuggestions zsh-nvm)
 source $ZSH/oh-my-zsh.sh
 
 # ------------------------------------------------------------------------------
+# Home / End / Delete keys (bound in every keymap; OMZ only binds the terminfo variants)
+# ------------------------------------------------------------------------------
+for keymap in emacs viins vicmd; do
+    bindkey -M $keymap '^[[H'  beginning-of-line   # Home (normal mode)
+    bindkey -M $keymap '^[OH'  beginning-of-line   # Home (application mode)
+    bindkey -M $keymap '^[[1~' beginning-of-line   # Home (tmux/screen/linux console)
+    bindkey -M $keymap '^[[7~' beginning-of-line   # Home (rxvt)
+    bindkey -M $keymap '^[[F'  end-of-line         # End (normal mode)
+    bindkey -M $keymap '^[OF'  end-of-line         # End (application mode)
+    bindkey -M $keymap '^[[4~' end-of-line         # End (tmux/screen/linux console)
+    bindkey -M $keymap '^[[8~' end-of-line         # End (rxvt)
+    bindkey -M $keymap '^[[3~' delete-char         # Delete
+done
+unset keymap
+
+# ------------------------------------------------------------------------------
 # Prompt - Starship (Replacing Powerlevel10k / p10k prompt)
 # ------------------------------------------------------------------------------
 export STARSHIP_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/starship/starship.toml"
@@ -104,6 +120,11 @@ fi
 export EDITOR='nvim'
 export VISUAL='nvim'
 
+# Input method (Fcitx5 - Vietnamese Unikey)
+export XMODIFIERS=@im=fcitx
+export QT_IM_MODULE=fcitx
+export GTK_IM_MODULE=fcitx
+
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
@@ -124,6 +145,7 @@ export VISUAL='nvim'
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 export REQUESTS_CA_BUNDLE=/usr/share/ca-certificates/azure_cli_cert.pem
+export SSH_AUTH_SOCK=/run/user/1000/gcr/ssh
 
 alias vim='nvim'
 # Changing "ls" to "exa"
@@ -157,6 +179,14 @@ alias dcd="docker compose down"
 alias dcu="docker compose up -d"
 alias dcb="docker compose build"
 alias dcr="docker compose down && docker compose up -d"
+
+# devpod
+alias ducode="devpod up --devcontainer-path .devpod/devcontainer.json --ide vscode --dotfiles https://github.com/khanhcao-saritasa/dotfiles --dotfiles-script .setup-no-install.sh ."
+alias ducodenc="devpod up --devcontainer-path .devpod/devcontainer.json --ide vscode --dotfiles https://github.com/khanhcao-saritasa/dotfiles --dotfiles-script .setup-no-install.sh . --recreate"
+alias duvimnc="devpod up --devcontainer-path .devpod/devcontainer.json --ide none --dotfiles https://github.com/khanhcao-saritasa/dotfiles --dotfiles-script .setup-no-install.sh . --recreate"
+alias duvim="devpod up --devcontainer-path .devpod/devcontainer.json --ide none --dotfiles https://github.com/khanhcao-saritasa/dotfiles --dotfiles-script .setup-no-install.sh ."
+alias ds="devpod ssh"
+alias drm="devpod delete"
 
 zstyle ':bracketed-paste-magic' active-widgets '.self-*'
 

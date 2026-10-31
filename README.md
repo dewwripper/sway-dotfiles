@@ -102,6 +102,12 @@ sudo apt install -y \
     blueman \
     polkit-gnome \
     neovim \
+    wl-clipboard \
+    copyq \
+    fcitx5 \
+    fcitx5-unikey \
+    fcitx5-frontend-all \
+    fcitx5-config-qt \
     eza
 ```
 
@@ -272,6 +278,7 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
 | `Print` | Take screenshot with `grim` |
 | `Super + Shift + v` | Open audio control mixer (`pavucontrol` floating) |
 | `Super + Shift + b` | Open Bluetooth manager (`blueman-manager` floating) |
+| `Super + c + k` | Toggle input method English ↔ Vietnamese (`fcitx5-remote -t`) |
 | `XF86AudioRaiseVolume` | Increase volume (+5%) via WirePlumber |
 | `XF86AudioLowerVolume` | Decrease volume (-5%) via WirePlumber |
 | `XF86AudioMute` | Toggle audio mute via WirePlumber |
@@ -303,6 +310,10 @@ The default modifier key is `Mod4` (**Super / Windows Key**).
   - **Left-Click:** Toggle audio mute.
   - **Right-Click:** Open GUI mixer (`pavucontrol`).
   - **Scroll Up / Down:** Raise / lower volume by 5%.
+- **Twingate:** (hidden when the `twingate` CLI is not installed)
+  - **Indicator:** Connection status (`󰒃 TG` when online, `󰦞 Off` otherwise), read from `systemctl is-active twingate` and the `sdwan0` tunnel rather than `twingate status`: the daemon answers CLI calls on a single thread and wedges when polled frequently. Resources are only fetched when the dropdown opens. `󰒙 TG?` means that fetch got no answer from the daemon; the dropdown then offers **Restart Twingate service** (`sudo systemctl restart twingate`).
+  - **Left-Click:** Toggle a dropdown listing your authorized resources with their address / alias and auth expiry. Type in the search field to filter by name, address or alias (`Enter` acts on the top match, `Esc` clears the search, then closes the dropdown). Click a resource to copy its address to the clipboard, or re-authenticate it (`twingate auth`) if its auth has lapsed.
+  - **Right-Click:** Connect / disconnect (`twingate start` / `twingate stop`, opened in Ghostty for the sudo prompt).
 - **Bluetooth Control:**
   - **Indicator:** Real-time Bluetooth adapter and connection status (`󰂱 <Device>` when connected, `󰂯 On` when active, `󰂲 Off` when disabled).
   - **Left-Click:** Toggle Bluetooth power on / off.
@@ -333,6 +344,99 @@ FZF shell integration is configured following the official upstream standard (`e
 | `fgb` | **Fuzzy Git Branch:** Switch local/remote branches with commit graph preview |
 | `fgl` | **Fuzzy Git Log:** Browse commit history; view diffs and copy commit SHA via `Ctrl + y` |
 | `fgst` | **Fuzzy Git Status:** Browse modified files; press `Ctrl + s` to stage/unstage |
+
+### 🚀 Starship Prompt Configuration
+The prompt is defined in `~/.config/starship/starship.toml` (symlinked from this repo). `.zshrc` points Starship at it via `STARSHIP_CONFIG` and runs `eval "$(starship init zsh)"`.
+
+**Prompt layout:**
+- **Left (`format`):** directory → git branch / commit / state / metrics / status → prompt character (`➜` success, `✗` error, `❮` Vi command mode).
+- **Right (`right_format`):** exit status → command duration (≥ 3s) → background jobs → direnv → `$ENV` → language runtimes → Kubernetes / Terraform / AWS (+ session time left) / Azure → Docker / Nix → username → hostname → time.
+
+**Common customizations:**
+| Goal | Change in `starship.toml` |
+| :--- | :--- |
+| Add / remove / reorder a module | Edit the `$module` list in `format` (left) or `right_format` (right); custom modules use `${custom.name}`, env vars use `${env_var.NAME}` |
+| Disable a module entirely | Add `disabled = true` under its `[module]` table (e.g. `[package]`, `[gcloud]`) |
+| Show hostname only over SSH | Set `ssh_only = true` under `[hostname]` (currently `false`, so it's always shown) |
+| Always show username | Set `show_always = true` under `[username]` |
+| Change colors | Edit `style` values: 256-color numbers (`"bold 76"`), names (`"bold red"`), or hex (`"#89b4fa"`) |
+| Change the slow-command threshold | Set `min_time` (ms) under `[cmd_duration]` |
+| Highlight production clusters | Add `[[kubernetes.contexts]]` entries with a `context_pattern` regex and `style` |
+| Add a custom segment | Add a `[custom.name]` table with `command` / `when` / `format`, then reference `${custom.name}` in a format string |
+
+**Testing changes** (edits apply on the next prompt; no reload needed):
+```bash
+starship explain                 # Show each module in the current prompt and how long it took
+starship module hostname         # Render a single module
+starship print-config hostname   # Show a module's effective config, including defaults
+starship timings                 # Find slow modules
+```
+
+See the [Starship configuration docs](https://starship.rs/config/) for every module and option.
+
+### ⌨️ Input Method (Fcitx5 – Vietnamese Unikey)
+Vietnamese typing is provided by **Fcitx5** with the **Unikey** engine.
+
+- **Daemon:** Sway starts `fcitx5 -d --replace` on login via `~/.config/sway/config.d/input.conf`.
+- **Environment:** `~/.zshrc` exports `XMODIFIERS=@im=fcitx`, `QT_IM_MODULE=fcitx` and `GTK_IM_MODULE=fcitx` so GTK, Qt and XWayland apps use Fcitx5.
+- **Toggle English ↔ Vietnamese:** Press `Super + c + k` (hold `Super`, then press `c` and `k` together), or left-click the `󰌌 ENG` / `󰌌 VIE` button in Quickshell.
+- **Configure:** Right-click the Quickshell input method button (or run `fcitx5-configtool`) to change input methods, the Unikey typing style (Telex / VNI / VIQR), and other options.
+- **Status bar indicator:** The button shows `ENG` (keyboard layout), `VIE` (Unikey active), or `N/A` if Fcitx5 isn't running. Left-clicking it while it shows `N/A` starts the daemon.
+
+**First-time setup:** If Unikey isn't in the list yet, open `fcitx5-configtool`, keep **Keyboard - English (US)** as the first entry, then add **Unikey** below it. `Super + c + k` switches between the first and the active input method, so the order matters. The resulting `~/.config/fcitx5/profile` should look like:
+```ini
+[Groups/0]
+Name=Default
+Default Layout=us
+DefaultIM=unikey
+
+[Groups/0/Items/0]
+Name=keyboard-us
+
+[Groups/0/Items/1]
+Name=unikey
+```
+
+**Troubleshooting**
+- **Can't type Vietnamese in an app:** Make sure the environment variables above are set for your Sway session (log out and back in after editing `~/.zshrc`), then restart Fcitx5 with `fcitx5 -d --replace`.
+- **Check the current input method:** `fcitx5-remote -n` prints `keyboard-us` or `unikey`.
+- **Diagnose problems:** Run `fcitx5-diagnose` to check frontends, environment variables and addons.
+
+### 📋 Clipboard (Wayland, Neovim & CopyQ)
+Clipboard support is provided by **wl-clipboard** (`wl-copy` / `wl-paste`), with **CopyQ** running as the clipboard history manager (started from `sway/config.d/clipboard.conf`).
+
+- **Neovim:** LazyVim sets `clipboard=unnamedplus`, so `y` / `p` use the system clipboard directly. Neovim picks `wl-copy` automatically when `WAYLAND_DISPLAY` is set.
+- **CopyQ:** Its window opens as a floating popup centered on screen; the bar button toggles it.
+
+**Troubleshooting: yank/paste in Neovim doesn't reach other apps**
+
+1. Check which clipboard tool Neovim is using:
+   ```vim
+   :checkhealth vim.provider
+   ```
+   The *Clipboard* section should report `Clipboard tool found: wl-copy`.
+2. If it reports `xclip` / `xsel` (or nothing), `wl-clipboard` is missing. Neovim falls back to the X11 (XWayland) clipboard, which doesn't sync reliably with native Wayland apps such as Ghostty, browsers, or CopyQ. Install it and restart Neovim:
+   ```bash
+   sudo apt install -y wl-clipboard
+   ```
+3. Verify the clipboard works outside Neovim:
+   ```bash
+   echo "hello" | wl-copy && wl-paste
+   ```
+
+### 🔔 Notifications Not Showing / `Super + Shift + n` Does Nothing
+If the `xfce4` package is installed, `xfce4-notifyd` gets D-Bus-activated at login and claims `org.freedesktop.Notifications` before `swaync` starts, so `swaync` exits and `swaync-client` hangs.
+1. Check who owns the notification bus name:
+   ```bash
+   busctl --user status org.freedesktop.Notifications | grep Comm=
+   ```
+2. If it is not `swaync`, mask `xfce4-notifyd` and start `swaync`:
+   ```bash
+   systemctl --user mask --now xfce4-notifyd.service
+   pkill -x swaync-client; swaymsg exec swaync
+   notify-send "test" "swaync works"
+   ```
+   (Undo with `systemctl --user unmask xfce4-notifyd.service`.)
 
 ### 🔄 Reloading Configurations
 - **Reload Sway:** Press `Super + Shift + c` (or run `swaymsg reload`).
