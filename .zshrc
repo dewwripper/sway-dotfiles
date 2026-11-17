@@ -4,10 +4,6 @@ export ZSH="$HOME/.oh-my-zsh"
 # Set name of the theme to load --- set to "" since prompt is managed by Starship
 ZSH_THEME=""
 
-
-bindkey -v
-export KEYTIMEOUT=1
-
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
 # a theme from this variable instead of looking in $ZSH/themes/
@@ -63,6 +59,9 @@ DISABLE_MAGIC_FUNCTIONS="true"
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
+# History control: add a space at the beginning-of-line to do not save this line to history
+HISTCONTROL=ignorespace
+
 # Which plugins would you like to load?
 # Standard plugins can be found in $ZSH/plugins/
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
@@ -71,6 +70,79 @@ DISABLE_MAGIC_FUNCTIONS="true"
 plugins=(git z zsh-autosuggestions zsh-nvm)
 
 source $ZSH/oh-my-zsh.sh
+
+# ------------------------------------------------------------------------------
+# Vi mode (must come after OMZ, which sets bindkey -e; and before Starship,
+# which wraps zle-keymap-select to redraw its ❮ vimcmd prompt symbol)
+# ------------------------------------------------------------------------------
+bindkey -v
+export KEYTIMEOUT=1   # Esc switches to normal mode in 10ms instead of 400ms
+
+# Cursor shape: beam in insert mode, block in normal mode
+_vi_cursor() {
+    case $KEYMAP in
+        vicmd)      print -n '\e[2 q' ;;   # steady block
+        viins|main) print -n '\e[6 q' ;;   # steady beam
+    esac
+}
+zle-keymap-select() { _vi_cursor }
+zle-line-init()     { zle -K viins; _vi_cursor }
+zle -N zle-keymap-select
+zle -N zle-line-init
+preexec_functions+=(_vi_cursor_reset)
+_vi_cursor_reset() { print -n '\e[2 q' }   # restore block cursor for programs (nvim, less...)
+
+# Insert mode: keep familiar emacs-style editing (vim's own insert mode allows these)
+bindkey -M viins '^?' backward-delete-char     # Backspace past the insert start point
+bindkey -M viins '^H' backward-delete-char
+bindkey -M viins '^W' backward-kill-word
+bindkey -M viins '^U' backward-kill-line
+bindkey -M viins '^A' beginning-of-line
+bindkey -M viins '^E' end-of-line
+bindkey -M viins '^K' kill-line
+bindkey -M viins '^P' up-line-or-search
+bindkey -M viins '^N' down-line-or-search
+
+# Normal mode: history search on prefix with k/j, edit full command in $EDITOR with v
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search edit-command-line
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+zle -N edit-command-line
+bindkey -M vicmd 'k' up-line-or-beginning-search
+bindkey -M vicmd 'j' down-line-or-beginning-search
+bindkey -M vicmd 'v' edit-command-line
+bindkey -M vicmd '/' history-incremental-search-backward
+bindkey -M vicmd '?' history-incremental-search-forward
+
+# Vim text objects: ciw, di", ya(, ci{ ...
+autoload -Uz select-bracketed select-quoted
+zle -N select-bracketed
+zle -N select-quoted
+for km in visual viopp; do
+    bindkey -M $km -- '-' vi-up-line-or-history
+    for c in {a,i}${(s..)^:-'()[]{}<>bB'}; do bindkey -M $km $c select-bracketed; done
+    for c in {a,i}${(s..)^:-\'\"\`\|,./:;=+@}; do bindkey -M $km $c select-quoted; done
+done
+unset km c
+
+# Vim surround: cs"' (change), ds" (delete), ys{motion}" (add), S" in visual
+autoload -Uz surround
+zle -N delete-surround surround
+zle -N add-surround surround
+zle -N change-surround surround
+bindkey -M vicmd 'cs' change-surround
+bindkey -M vicmd 'ds' delete-surround
+bindkey -M vicmd 'ys' add-surround
+bindkey -M visual 'S' add-surround
+
+# Yank to system clipboard in normal mode: Y copies the whole line
+_vi_yank_clipboard() {
+    if command -v wl-copy &>/dev/null; then print -rn -- "$BUFFER" | wl-copy
+    elif command -v xclip &>/dev/null; then print -rn -- "$BUFFER" | xclip -selection clipboard
+    fi
+}
+zle -N _vi_yank_clipboard
+bindkey -M vicmd 'Y' _vi_yank_clipboard
 
 # ------------------------------------------------------------------------------
 # Home / End / Delete keys (bound in every keymap; OMZ only binds the terminfo variants)
@@ -87,6 +159,10 @@ for keymap in emacs viins vicmd; do
     bindkey -M $keymap '^[[3~' delete-char         # Delete
 done
 unset keymap
+
+# Ctrl+F accepts zsh-autosuggestions suggestion (vi insert + emacs)
+bindkey -M viins '^F' autosuggest-accept
+bindkey -M emacs '^F' autosuggest-accept
 
 # ------------------------------------------------------------------------------
 # Prompt - Starship (Replacing Powerlevel10k / p10k prompt)
@@ -145,7 +221,13 @@ export GTK_IM_MODULE=fcitx
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 export REQUESTS_CA_BUNDLE=/usr/share/ca-certificates/azure_cli_cert.pem
-export SSH_AUTH_SOCK=/run/user/1000/gcr/ssh
+if [ -z "$SSH_AUTH_SOCK" ]; then
+    if [ -S "$XDG_RUNTIME_DIR/openssh_agent" ]; then
+        export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/openssh_agent"
+    elif [ -S "/run/user/1000/gcr/ssh" ]; then
+        export SSH_AUTH_SOCK="/run/user/1000/gcr/ssh"
+    fi
+fi
 
 alias vim='nvim'
 # Changing "ls" to "exa"
@@ -179,17 +261,70 @@ alias dcd="docker compose down"
 alias dcu="docker compose up -d"
 alias dcb="docker compose build"
 alias dcr="docker compose down && docker compose up -d"
+# open a login shell in a container with AWS credentials from aws-vault: awsdev <profile> <container>
+awsdev() { aws-vault exec "$1" -- podman exec -it \
+  -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
+  -e AWS_REGION -e AWS_VAULT "$2" zsh --login; }
 
 # devpod
-alias ducode="devpod up --devcontainer-path .devpod/devcontainer.json --ide vscode --dotfiles https://github.com/khanhcao-saritasa/dotfiles --dotfiles-script .setup-no-install.sh ."
-alias ducodenc="devpod up --devcontainer-path .devpod/devcontainer.json --ide vscode --dotfiles https://github.com/khanhcao-saritasa/dotfiles --dotfiles-script .setup-no-install.sh . --recreate"
-alias duvimnc="devpod up --devcontainer-path .devpod/devcontainer.json --ide none --dotfiles https://github.com/khanhcao-saritasa/dotfiles --dotfiles-script .setup-no-install.sh . --recreate"
-alias duvim="devpod up --devcontainer-path .devpod/devcontainer.json --ide none --dotfiles https://github.com/khanhcao-saritasa/dotfiles --dotfiles-script .setup-no-install.sh ."
-alias ds="devpod ssh"
+alias ducode="devpod up --devcontainer-path .devpod/devcontainer.json --ide vscode --dotfiles https://github.com/dewwripper/dotfiles --dotfiles-script .setup-no-install.sh ."
+alias ducodenc="devpod up --devcontainer-path .devpod/devcontainer.json --ide vscode --dotfiles https://github.com/dewwripper/dotfiles --dotfiles-script .setup-no-install.sh . --recreate"
+alias duvimnc="devpod up --devcontainer-path .devpod/devcontainer.json --ide none --dotfiles https://github.com/dewwripper/dotfiles --dotfiles-script .setup-no-install.sh . --recreate"
+alias duvim="devpod up --devcontainer-path .devpod/devcontainer.json --ide none --dotfiles https://github.com/dewwripper/dotfiles --dotfiles-script .setup-no-install.sh ."
+# replace ./.devpod with a fresh copy of the devpod template, without its git history (command rm skips the rm -i alias)
+alias gcldp="command rm -rf .devpod && git clone https://github.com/khanhcmlab/devpod-template-docker .devpod && command rm -rf .devpod/.git"
+alias gcldpc="command rm -rf .devpod && git clone https://github.com/khanhcmlab/devpod-template-docker .devpod && command rm -rf .devpod/.git"
+# herdr: add/remove the current folder's devpod workspace as a machine
+alias hma='herdr machine add "${PWD:t}.devpod"'
+alias tbo='terminal-browser open --ssh "${PWD:t}.devpod"'
+# forward a port from the current folder's devpod workspace: sshpfw 3000
+sshpfw() { ssh -L "${1}:localhost:${1}" "${PWD:t}.devpod"; }
+# remove takes a profile id, so look it up by name in `herdr machine list`
+unalias hmr 2>/dev/null
+function hmr {
+    local name="${PWD:t}.devpod" id
+    id=$(herdr machine list | awk -F'\t' -v n="$name" '$2 == n { print $1; exit }')
+    if [[ -z "$id" ]]; then
+        echo "hmr: no saved machine named $name" >&2
+        return 1
+    fi
+    herdr machine remove "$id"
+}
+# hdrcl: remove every saved machine that `herdr machine status` reports as error
+unalias hdrcl 2>/dev/null
+function hdrcl {
+    local ids id name
+    echo "hdrcl: checking saved machines (takes ~2s per machine)..."
+    ids=$(herdr machine status </dev/null 2>/dev/null | awk -F'\t' '$3 == "error" { print $1 "\t" $2 }')
+    if [[ -z "$ids" ]]; then
+        echo "hdrcl: no machines in error state"
+        return 0
+    fi
+    while IFS=$'\t' read -r id name; do
+        echo "removing $name ($id)"
+        herdr machine remove "$id" </dev/null
+    done <<< "$ids"
+}
+# ds [workspace]: ssh into a devpod workspace (default: current folder name) with a reverse
+# tunnel on 17777, so xdg-open/$BROWSER in the container opens URLs in the host browser
+# (needs host-browser.service). Falls back to plain `devpod ssh` if no ssh host entry exists.
+ds() {
+    local ws="${1:-${PWD:t}}"
+    if grep -q "^Host ${ws}\.devpod$" ~/.ssh/config 2>/dev/null; then
+        ssh -R 17777:127.0.0.1:17777 "${ws}.devpod"
+    else
+        devpod ssh "$@"
+    fi
+}
 alias drm="devpod delete"
 
 zstyle ':bracketed-paste-magic' active-widgets '.self-*'
 
+if [ -S "$XDG_RUNTIME_DIR/podman/podman.sock" ]; then
+    export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock"
+fi
+export COMPOSE_BAKE=false DOCKER_BUILDKIT=0
 
-# Added by Antigravity CLI installer
-export PATH="/home/deww/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+
+[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
